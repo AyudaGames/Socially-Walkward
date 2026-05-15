@@ -1,0 +1,2865 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Socially Walkward · Ayuda Games</title>
+<meta name="author" content="Ayuda Agency Ltd">
+<meta name="description" content="Socially Walkward - dodge the small talk. A one-button retro runner from Ayuda Games.">
+<meta name="copyright" content="© 2026 Ayuda Agency Ltd. All rights reserved.">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #ff2d95;
+    --pink-dark: #c91973;
+    --yellow: #ffee00;
+    --yellow-dark: #d4c400;
+    --cyan: #00f0ff;
+    --cyan-dark: #00b8c4;
+    --bg-deep: #1a0033;
+    --bg-mid: #2d0a4f;
+    --shadow: #0a0015;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    width: 100%;
+    background: var(--bg-deep);
+    font-family: 'Press Start 2P', monospace;
+    color: var(--yellow);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    position: fixed;
+    overscroll-behavior: none;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    touch-action: none;
+  }
+  #wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  #hud {
+    flex: 0 0 auto;
+    padding: 14px 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--shadow);
+    border-bottom: 3px solid var(--pink);
+    font-size: 9px;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 5;
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  #hud::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pink), var(--yellow), var(--cyan), var(--pink));
+    background-size: 200% 100%;
+    animation: scroll-gradient 4s linear infinite;
+  }
+  @keyframes scroll-gradient {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+  #hud .label { color: var(--cyan); }
+  #hud .val { color: var(--yellow); margin-left: 5px; }
+  #hud .best { color: var(--pink); }
+  #mask-bar {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 5px;
+    background: var(--shadow);
+    border: 1px solid var(--cyan);
+    z-index: 6;
+  }
+  #mask-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--yellow));
+    transition: width 0.15s linear;
+  }
+  #canvas-wrap {
+    flex: 1 1 auto;
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    background: #ff6ec7;
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    display: block;
+    cursor: pointer;
+    touch-action: none;
+  }
+  #tap-zone {
+    flex: 0 0 auto;
+    padding: 14px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    background: var(--shadow);
+    border-top: 3px solid var(--cyan);
+    text-align: center;
+    font-size: 9px;
+    color: var(--yellow);
+    letter-spacing: 1.5px;
+    position: relative;
+    touch-action: none;
+  }
+  #tap-zone::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--pink), var(--yellow), var(--cyan));
+    background-size: 200% 100%;
+    animation: scroll-gradient 4s linear infinite reverse;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 24px 16px;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    z-index: 10;
+    overflow: hidden;
+    background: linear-gradient(180deg, #2d0a4f 0%, #1a0033 100%);
+  }
+  #overlay > * { position: relative; z-index: 2; }
+
+/* Top tagline strip */
+.top-strip {
+display: inline-block;
+padding: 5px 12px;
+background: var(–cyan);
+color: var(–shadow);
+font-size: 7px;
+letter-spacing: 2px;
+border: 2px solid var(–shadow);
+transform: rotate(-2deg);
+box-shadow: 2px 2px 0 var(–shadow);
+margin-bottom: 2px;
+}
+
+/* Title block — Cool Spot style massive logo */
+.title-block {
+display: flex;
+flex-direction: column;
+align-items: center;
+margin: 4px 0;
+}
+#overlay h1 {
+font-size: 32px;
+color: var(–yellow);
+line-height: 0.95;
+letter-spacing: 3px;
+-webkit-text-stroke: 2px var(–shadow);
+text-stroke: 2px var(–shadow);
+text-shadow:
+3px 3px 0 var(–shadow),
+5px 5px 0 var(–pink),
+7px 7px 0 var(–cyan);
+transform: rotate(-3deg);
+margin-bottom: 2px;
+}
+#overlay h1 .word2 {
+display: block;
+color: var(–pink);
+font-size: 26px;
+transform: rotate(2deg) translateX(16px);
+text-shadow:
+3px 3px 0 var(–shadow),
+5px 5px 0 var(–yellow),
+7px 7px 0 var(–cyan);
+margin-top: 2px;
+}
+/* Title bursts in then bounces */
+#overlay h1 { animation: title-burst 0.6s ease-out, title-bob 2.4s ease-in-out 0.6s infinite; }
+@keyframes title-burst {
+0% { transform: rotate(-3deg) scale(0.3); opacity: 0; }
+60% { transform: rotate(-3deg) scale(1.15); opacity: 1; }
+100% { transform: rotate(-3deg) scale(1); }
+}
+@keyframes title-bob {
+0%, 100% { transform: rotate(-3deg) translateY(0); }
+50% { transform: rotate(-3deg) translateY(-4px); }
+}
+
+.subtitle-banner {
+display: inline-block;
+padding: 5px 12px;
+background: var(–yellow);
+color: var(–shadow);
+font-size: 8px;
+letter-spacing: 2px;
+border: 2px solid var(–shadow);
+transform: rotate(2deg);
+box-shadow: 2px 2px 0 var(–pink), 4px 4px 0 var(–shadow);
+margin-top: 10px;
+}
+
+/* Pixel character display canvas in the middle */
+#hero-canvas {
+width: 150px;
+height: 150px;
+image-rendering: pixelated;
+image-rendering: crisp-edges;
+margin: 4px 0;
+filter: drop-shadow(3px 3px 0 var(–shadow));
+}
+
+/* Press start prompt — unused, kept blink keyframe gone */
+
+#overlay button {
+font-family: ‘Press Start 2P’, monospace;
+font-size: 11px;
+padding: 10px 18px;
+background: var(–yellow);
+color: var(–shadow);
+border: 2px solid var(–shadow);
+border-bottom: 4px solid var(–pink-dark);
+border-right: 4px solid var(–pink-dark);
+cursor: pointer;
+letter-spacing: 2px;
+line-height: 1.4;
+transition: all 0.05s;
+touch-action: manipulation;
+-webkit-appearance: none;
+appearance: none;
+margin-top: 8px;
+transform: scale(1);
+animation: button-pulse 1.6s ease-in-out infinite;
+max-width: 280px;
+white-space: normal;
+}
+@keyframes button-pulse {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.04); }
+}
+#overlay button:active {
+transform: translate(2px, 2px) scale(1);
+border-bottom-width: 2px;
+border-right-width: 2px;
+animation: none;
+}
+
+/* Game over overlay uses simpler treatment */
+.gameover-mode #overlay::before { display: none; }
+.gameover-mode #overlay {
+background: linear-gradient(135deg, rgba(26, 0, 51, 0.96), rgba(45, 10, 79, 0.96));
+justify-content: center;
+}
+.gameover-mode .top-strip,
+.gameover-mode .subtitle-banner,
+.gameover-mode #hero-canvas,
+.gameover-mode #daily-strip,
+.gameover-mode .nav-buttons { display: none !important; }
+
+#overlay .score-box {
+margin: 16px 0 20px;
+padding: 14px 24px;
+background: var(–shadow);
+border: 3px solid var(–yellow);
+box-shadow: 4px 4px 0 var(–pink), 8px 8px 0 var(–cyan);
+font-size: 10px;
+line-height: 2.2;
+color: var(–yellow);
+}
+#overlay .score-box .num { color: var(–pink); }
+#overlay p {
+font-size: 8px;
+color: var(–cyan);
+line-height: 2;
+margin-bottom: 4px;
+max-width: 320px;
+letter-spacing: 1px;
+}
+#overlay h2 {
+font-size: 10px;
+color: var(–yellow);
+margin-bottom: 18px;
+letter-spacing: 1px;
+line-height: 1.6;
+}
+.hide { display: none !important; }
+
+#overload {
+position: absolute;
+inset: 0;
+pointer-events: none;
+z-index: 20;
+opacity: 0;
+background: repeating-linear-gradient(0deg, var(–pink) 0 4px, var(–yellow) 4px 8px, var(–cyan) 8px 12px);
+mix-blend-mode: difference;
+}
+#overload.fire { animation: overload-flash 0.9s steps(8) forwards; }
+@keyframes overload-flash {
+0% { opacity: 0; transform: scale(1); }
+20% { opacity: 0.95; transform: scale(1.02); }
+40% { opacity: 0.4; }
+60% { opacity: 0.9; }
+80% { opacity: 0.3; }
+100% { opacity: 0; }
+}
+.scanlines {
+position: absolute;
+inset: 0;
+pointer-events: none;
+background: repeating-linear-gradient(0deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px, transparent 1px, transparent 3px);
+z-index: 4;
+}
+.ndinfo, .ayuda-presents, .ayuda-logo { display: none; }
+.ayuda-footer {
+position: absolute;
+bottom: 8px;
+left: 0;
+right: 0;
+text-align: center;
+font-size: 6px;
+color: rgba(244, 232, 193, 0.65);
+letter-spacing: 1.5px;
+z-index: 3;
+padding-bottom: env(safe-area-inset-bottom);
+}
+.ayuda-footer .brand {
+color: var(–yellow);
+letter-spacing: 2px;
+}
+
+/* ===== Stickiness UI ===== */
+.toast {
+position: fixed;
+top: 70px;
+left: 50%;
+transform: translateX(-50%) translateY(-20px);
+background: var(–shadow);
+border: 3px solid var(–yellow);
+box-shadow: 4px 4px 0 var(–pink);
+padding: 10px 16px;
+color: var(–yellow);
+font-family: ‘Press Start 2P’, monospace;
+font-size: 8px;
+letter-spacing: 1px;
+z-index: 100;
+opacity: 0;
+transition: opacity 0.3s, transform 0.3s;
+text-align: center;
+max-width: 80%;
+line-height: 1.6;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-sub { font-size: 6px; color: var(–cyan); margin-top: 4px; letter-spacing: 1px; }
+
+.daily-strip {
+background: var(–shadow);
+border: 2px solid var(–cyan);
+padding: 6px 10px;
+margin: 4px 0;
+font-size: 6px;
+color: var(–cyan);
+letter-spacing: 1px;
+max-width: 320px;
+text-align: center;
+line-height: 1.5;
+}
+.daily-strip .lbl { color: var(–pink); }
+.daily-strip .txt { color: var(–yellow); display: block; margin-top: 2px; font-size: 7px; }
+.daily-strip .done { color: #4ade80; }
+
+.streak-pill {
+display: inline-block;
+background: var(–pink);
+color: var(–shadow);
+padding: 4px 8px;
+font-size: 7px;
+border: 2px solid var(–shadow);
+letter-spacing: 1px;
+margin-left: 6px;
+}
+
+/* Locker (outfit/location screens) */
+.locker {
+position: fixed;
+inset: 0;
+background: linear-gradient(180deg, #2d0a4f 0%, #1a0033 100%);
+z-index: 50;
+display: flex;
+flex-direction: column;
+padding: 20px 16px;
+padding-top: max(20px, calc(env(safe-area-inset-top) + 10px));
+padding-bottom: max(20px, env(safe-area-inset-bottom));
+color: var(–yellow);
+overflow-y: auto;
+}
+.locker.hide { display: none; }
+.locker h2 {
+font-size: 14px;
+color: var(–pink);
+margin-bottom: 14px;
+letter-spacing: 2px;
+text-align: center;
+text-shadow: 2px 2px 0 var(–shadow);
+}
+.locker .back {
+background: var(–yellow);
+color: var(–shadow);
+border: 2px solid var(–shadow);
+padding: 8px 14px;
+font-family: ‘Press Start 2P’, monospace;
+font-size: 8px;
+letter-spacing: 1px;
+cursor: pointer;
+align-self: flex-start;
+margin-bottom: 14px;
+position: relative;
+z-index: 51;
+}
+.locker-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+margin-bottom: 12px;
+}
+.locker-card {
+background: var(–shadow);
+border: 2px solid var(–cyan);
+padding: 8px 6px;
+font-size: 7px;
+letter-spacing: 1px;
+color: var(–yellow);
+text-align: center;
+cursor: pointer;
+line-height: 1.6;
+}
+.locker-card.locked { color: rgba(244, 232, 193, 0.4); border-color: #444; cursor: not-allowed; }
+.locker-card.selected { border-color: var(–pink); background: #2d1545; }
+.locker-card .name { color: var(–pink); font-size: 8px; display: block; margin-bottom: 4px; }
+.locker-card.locked .name { color: #666; }
+.locker-card .req { color: var(–cyan); font-size: 6px; line-height: 1.5; display: block; margin-top: 4px; }
+.locker-card canvas { width: 56px; height: 56px; image-rendering: pixelated; image-rendering: crisp-edges; margin: 4px auto; display: block; }
+.locker-card.locked canvas { filter: brightness(0.3) saturate(0); }
+
+.nav-buttons {
+display: flex;
+gap: 6px;
+justify-content: center;
+flex-wrap: wrap;
+margin: 6px 0;
+}
+.nav-btn {
+background: transparent;
+border: 2px solid var(–cyan);
+color: var(–cyan);
+font-family: ‘Press Start 2P’, monospace;
+font-size: 6px;
+padding: 5px 8px;
+cursor: pointer;
+letter-spacing: 1px;
+}
+.nav-btn:active { background: var(–cyan); color: var(–shadow); }
+
+/* Instructions modal */
+.modal-backdrop {
+position: fixed;
+inset: 0;
+background: rgba(10, 0, 21, 0.92);
+z-index: 30;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+padding-top: max(20px, env(safe-area-inset-top));
+padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+.modal-backdrop.hide { display: none; }
+.modal-box {
+background: var(–bg-deep);
+border: 3px solid var(–yellow);
+box-shadow: 6px 6px 0 var(–pink), 12px 12px 0 var(–cyan);
+padding: 18px 16px;
+max-width: 360px;
+width: 100%;
+max-height: 90vh;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+color: var(–yellow);
+font-family: ‘Press Start 2P’, monospace;
+}
+.modal-box h2 {
+color: var(–pink);
+font-size: 12px;
+text-align: center;
+margin-bottom: 12px;
+letter-spacing: 2px;
+text-shadow: 2px 2px 0 var(–shadow);
+}
+.modal-box .rule {
+background: var(–shadow);
+border-left: 3px solid var(–cyan);
+padding: 8px 10px;
+margin-bottom: 6px;
+font-size: 6px;
+line-height: 1.9;
+letter-spacing: 0.5px;
+color: var(–yellow);
+}
+.modal-box .rule .label {
+color: var(–pink);
+display: block;
+margin-bottom: 4px;
+font-size: 7px;
+letter-spacing: 1px;
+}
+.modal-box .rule .quirk {
+color: var(–cyan);
+display: block;
+margin-top: 4px;
+font-size: 6px;
+letter-spacing: 0.5px;
+}
+.modal-box .close-btn {
+width: 100%;
+margin-top: 10px;
+background: var(–yellow);
+color: var(–shadow);
+border: 3px solid var(–shadow);
+border-bottom: 6px solid var(–pink-dark);
+border-right: 6px solid var(–pink-dark);
+font-family: ‘Press Start 2P’, monospace;
+font-size: 9px;
+padding: 10px;
+cursor: pointer;
+letter-spacing: 2px;
+}
+.modal-box .close-btn:active {
+transform: translate(3px, 3px);
+border-bottom-width: 3px;
+border-right-width: 3px;
+}
+</style>
+
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">
+    <div><span class="label">SCORE</span><span class="val" id="score">0</span></div>
+    <div><span class="label">DODGED</span><span class="val" id="dodges">0</span></div>
+    <div><span class="label best">BEST</span><span class="val" id="best">0</span></div>
+    <div id="mask-bar"><div id="mask-fill"></div></div>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="game"></canvas>
+    <div class="scanlines"></div>
+  </div>
+  <div id="tap-zone">TAP TO TURN RIGHT →</div>
+  <div id="overload"></div>
+
+  <div id="overlay">
+    <div class="top-strip">★ DODGE SMALL TALK. NO LEFT TURNS. ★</div>
+    <div class="title-block">
+      <h1>SOCIALLY<span class="word2">WALKWARD!</span></h1>
+      <div class="subtitle-banner">RIGHT TURNS ONLY!</div>
+    </div>
+    <canvas id="hero-canvas" width="200" height="200"></canvas>
+    <div id="daily-strip" class="daily-strip"></div>
+    <button id="start-btn">START</button>
+    <div class="nav-buttons">
+      <button class="nav-btn" id="nav-howto">HOW TO PLAY</button>
+      <button class="nav-btn" id="nav-outfits">OUTFITS</button>
+      <button class="nav-btn" id="nav-locations">LOCATIONS</button>
+    </div>
+    <div class="ayuda-footer">© 2026 AYUDA AGENCY LTD · <span class="brand">AYUDA GAMES</span></div>
+  </div>
+
+  <div id="howto-modal" class="modal-backdrop hide">
+    <div class="modal-box">
+      <h2>HOW TO PLAY</h2>
+      <div class="rule">
+        <span class="label">YOU CAN'T STOP WALKING</span>
+        Once you put your headphones on, you keep moving forward. There's no pause, no backing up. The world keeps coming.
+      </div>
+      <div class="rule">
+        <span class="label">TAP TO TURN RIGHT</span>
+        Tap anywhere to turn 90° clockwise. That's it.
+        <span class="quirk">↻ You can ONLY turn right. No lefts. Ever. To go left, take three rights and accept your fate.</span>
+      </div>
+      <div class="rule">
+        <span class="label">DODGE THE TALKERS</span>
+        Pink figures with speech bubbles are people you know. Walk past them and you'll be trapped in small talk forever.
+      </div>
+      <div class="rule">
+        <span class="label">STRANGERS ARE SAFE</span>
+        Grey figures are blissful strangers. They don't care about you. You don't care about them. Beautiful.
+      </div>
+      <div class="rule">
+        <span class="label">MEET FRIENDLIES</span>
+        Dogs, coffee carts, fellow headphone-wearers. Walk into the green glow for bonus points and a nicer time.
+      </div>
+      <div class="rule">
+        <span class="label">DAILY CHALLENGES</span>
+        A new goal every day. Complete them for streaks, achievements, and unlocks.
+      </div>
+      <button class="close-btn" id="howto-close">GOT IT</button>
+    </div>
+  </div>
+
+  <div id="locker-outfits" class="locker hide">
+    <button class="back" id="back-outfits">← BACK</button>
+    <h2>OUTFITS</h2>
+    <div id="outfits-grid" class="locker-grid"></div>
+  </div>
+
+  <div id="locker-locations" class="locker hide">
+    <button class="back" id="back-locations">← BACK</button>
+    <h2>LOCATIONS</h2>
+    <div id="locations-grid" class="locker-grid"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const canvasWrap = document.getElementById('canvas-wrap');
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('start-btn');
+  const scoreEl = document.getElementById('score');
+  const dodgesEl = document.getElementById('dodges');
+  const bestEl = document.getElementById('best');
+  const maskFill = document.getElementById('mask-fill');
+  const overloadEl = document.getElementById('overload');
+
+  let W, H, dpr;
+  let audioCtx = null;
+  let soundtrack = null;
+  let soundtrackReady = false;
+  let voiceClips = [];
+  let lastVoicePlayTime = 0;
+  let calmBuffEnd = 0;
+
+  function resize() {
+    dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const rect = canvasWrap.getBoundingClientRect();
+    W = Math.max(1, rect.width);
+    H = Math.max(1, rect.height);
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+  }
+
+  function setVH() {
+    const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+    document.documentElement.style.height = (vh * 100) + 'px';
+    document.body.style.height = (vh * 100) + 'px';
+  }
+
+  setVH();
+  window.addEventListener('resize', () => { setVH(); resize(); });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => { setVH(); resize(); }, 100);
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => { setVH(); resize(); });
+  }
+
+  const DIRS = [
+    { x: 0, y: -1 },  // 0 N
+    { x: 1, y: 0 },   // 1 E
+    { x: 0, y: 1 },   // 2 S
+    { x: -1, y: 0 }   // 3 W
+  ];
+
+  // World-space player (no longer screen-bound). Camera follows.
+  let player, npcs, score, dodges, best, running, gameTime, spawnTimer, masking, particles, camera, pathTrail;
+  let friendlies = [], friendlySpawnTimer = 0, totalFriendliesMet = 0;
+  let currentLocation = 'park'; // 'park' or 'beach'
+
+  // ====== PERSISTENT PROGRESSION ======
+  function loadProgress() {
+    try {
+      return JSON.parse(localStorage.getItem('swProgress') || '{}');
+    } catch(e) { return {}; }
+  }
+  function saveProgress(p) {
+    try { localStorage.setItem('swProgress', JSON.stringify(p)); } catch(e) {}
+  }
+  let progress = loadProgress();
+  // Initialise defaults
+  if (!progress.unlockedOutfits) progress.unlockedOutfits = ['default'];
+  if (!progress.currentOutfit) progress.currentOutfit = 'default';
+  if (!progress.unlockedLocations) progress.unlockedLocations = ['park'];
+  if (!progress.totalDodges) progress.totalDodges = 0;
+  if (!progress.totalRuns) progress.totalRuns = 0;
+  if (!progress.bestPark) progress.bestPark = 0;
+  if (!progress.bestBeach) progress.bestBeach = 0;
+  if (!progress.achievements) progress.achievements = {};
+  if (!progress.lastPlayDate) progress.lastPlayDate = '';
+  if (!progress.streak) progress.streak = 0;
+  if (!progress.dailyDate) progress.dailyDate = '';
+  if (!progress.dailyDone) progress.dailyDone = false;
+
+  // ====== OUTFITS ======
+  // shirt = jacket body, hat = beanie, modifier = optional gameplay tweak
+  const OUTFITS = {
+    'default':   { name: 'The Walker',     desc: 'Starter outfit',                 hat: '#f4c430', hatShade:'#b8901c', shirt: '#8b5a2b', shirtShade:'#5a3818', accent:'#a06d35', skin:'#e8b58a', skinShade:'#c89070', trouser:'#2c3a62', unlock: 'Default' },
+    'hoodie':    { name: 'The Hoodie',     desc: 'Hood up = harder to spot',       hat: '#3a3a42', hatShade:'#1a1a22', shirt: '#3a3a42', shirtShade:'#1a1a22', accent:'#5a5a62', skin:'#e8b58a', skinShade:'#c89070', trouser:'#2c3a62', unlock: 'Dodge 100 talkers total', mod: { bubbleRange: 0.8 } },
+    'office':    { name: 'The Commuter',   desc: 'Office wear',                    hat: '#26262c', hatShade:'#1a1a22', shirt: '#1a2638', shirtShade:'#0a121e', accent:'#d4d8e0', skin:'#e8b58a', skinShade:'#c89070', trouser:'#1a2638', unlock: 'Reach 1500 score' },
+    'tourist':   { name: 'The Tourist',    desc: 'Bumbag and all',                 hat: '#d65050', hatShade:'#a03838', shirt: '#f4ece0', shirtShade:'#c8c0b4', accent:'#3d8aa0', skin:'#e8b58a', skinShade:'#c89070', trouser:'#6b5e3e', unlock: 'Reach 3000 score' },
+    'shades':    { name: 'The Shades',     desc: 'They notice you later',          hat: '#f4c430', hatShade:'#b8901c', shirt: '#8b5a2b', shirtShade:'#5a3818', accent:'#1a1a22', skin:'#e8b58a', skinShade:'#c89070', trouser:'#2c3a62', unlock: 'Meet 20 friendlies total', mod: { bubbleRange: 0.7 } },
+    'gymrat':    { name: 'The Gym Rat',    desc: 'Sweaty. People keep distance.',  hat: '#3a3a42', hatShade:'#1a1a22', shirt: '#a04040', shirtShade:'#6a2828', accent:'#f4ece0', skin:'#e8b58a', skinShade:'#c89070', trouser:'#26262c', unlock: 'Survive 2 minutes in one run', mod: { catchRange: 0.85 } },
+    'influencer':{ name: 'The Influencer', desc: 'Hard mode. Talkers swarm.',      hat: '#ff2d95', hatShade:'#c91973', shirt: '#00f0ff', shirtShade:'#00b8c4', accent:'#ffee00', skin:'#e8b58a', skinShade:'#c89070', trouser:'#ff2d95', unlock: 'Complete 14 daily challenges',     mod: { acqChance: 1.4, scoreMul: 1.5 } }
+  };
+
+  function getOutfit() {
+    const id = progress.currentOutfit || 'default';
+    return Object.assign({ id }, OUTFITS[id] || OUTFITS['default']);
+  }
+
+  // Colour helpers
+  function clamp(v) { return Math.max(0, Math.min(255, v)); }
+  function lighten(hex, amount) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = clamp((n >> 16) + amount);
+    const g = clamp(((n >> 8) & 0xff) + amount);
+    const b = clamp((n & 0xff) + amount);
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
+  function darken(hex, amount) { return lighten(hex, -amount); }
+
+  // ====== ACHIEVEMENTS ======
+  const ACHIEVEMENTS = {
+    'first_caught':   { name: 'Welcome to Hell',      desc: 'Get caught for the first time' },
+    'caught_50':      { name: 'Always Talking',       desc: 'Get caught 150 times' },
+    'dodge_10_run':   { name: 'Polite Society',       desc: 'Dodge 25 talkers in one run' },
+    'long_walk':      { name: 'The Long Walk',        desc: '90 seconds without turning' },
+    'first_friendly': { name: 'Good Boy',             desc: 'Meet your first friendly' },
+    'reach_500':      { name: 'Getting the Hang',     desc: 'Score 1500 in one run' },
+    'reach_1000':     { name: 'Master Avoider',       desc: 'Score 3500 in one run' },
+    'daily_first':    { name: 'Daily Walker',         desc: 'Complete a daily challenge' },
+    'streak_7':       { name: 'Week of Avoiding',     desc: '14-day streak' },
+    'all_locations':  { name: 'World Traveller',      desc: 'Unlock all locations' }
+  };
+
+  function unlockAchievement(id) {
+    if (progress.achievements[id]) return false;
+    progress.achievements[id] = Date.now();
+    saveProgress(progress);
+    showToast('🏆 ' + ACHIEVEMENTS[id].name, ACHIEVEMENTS[id].desc);
+    return true;
+  }
+
+  // ====== TOAST NOTIFICATIONS ======
+  function showToast(title, sub) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<div class="toast-title">${title}</div><div class="toast-sub">${sub||''}</div>`;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(()=>t.remove(), 400); }, 3200);
+  }
+
+  // ====== DAILY CHALLENGE ======
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  }
+  function seededRandom(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+  const DAILY_CHALLENGES = [
+    { id: 'd_friendly', text: 'Meet 3 friendlies in one run', check: (s) => (s.friendliesMetInRun || 0) >= 3 },
+    { id: 'd_score300', text: 'Score 800 in one run', check: (s) => s.score >= 800 },
+    { id: 'd_dodge15', text: 'Dodge 30 talkers in one run', check: (s) => s.dodges >= 30 },
+    { id: 'd_dodge8noturn', text: 'Dodge 12 talkers with under 8 turns', check: (s) => s.dodges >= 12 && s.turns < 8 },
+    { id: 'd_survive45', text: 'Survive 90 seconds', check: (s) => s.timeSurvived >= 90000 },
+    { id: 'd_walk_far', text: 'Walk a long way (4000 units)', check: (s) => s.distance >= 4000 }
+  ];
+  function getDaily() {
+    const key = todayKey();
+    if (progress.dailyDate !== key) {
+      progress.dailyDate = key;
+      progress.dailyDone = false;
+      saveProgress(progress);
+    }
+    const idx = seededRandom(key) % DAILY_CHALLENGES.length;
+    return DAILY_CHALLENGES[idx];
+  }
+  function updateStreak() {
+    const today = todayKey();
+    if (progress.lastPlayDate === today) return;
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const yesterday = `${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
+    if (progress.lastPlayDate === yesterday) progress.streak = (progress.streak || 0) + 1;
+    else progress.streak = 1;
+    progress.lastPlayDate = today;
+    saveProgress(progress);
+    if (progress.streak >= 14) unlockAchievement('streak_7');
+  }
+
+  // ====== OUTFIT UNLOCK CHECKS ======
+  function checkOutfitUnlocks(runStats) {
+    const newUnlocks = [];
+    function tryUnlock(id) {
+      if (!progress.unlockedOutfits.includes(id)) {
+        progress.unlockedOutfits.push(id);
+        newUnlocks.push(id);
+      }
+    }
+    if (progress.totalDodges >= 100) tryUnlock('hoodie');
+    if (runStats && runStats.score >= 1500) tryUnlock('office');
+    if (runStats && runStats.score >= 3000) tryUnlock('tourist');
+    if (totalFriendliesMet >= 20) tryUnlock('shades');
+    if (runStats && runStats.timeSurvived >= 120000) tryUnlock('gymrat');
+    if ((progress.dailyCount || 0) >= 14) tryUnlock('influencer');
+    // Location unlock - much harder
+    if ((progress.totalDodges >= 200 || (runStats && runStats.score >= 2500)) && !progress.unlockedLocations.includes('beach')) {
+      progress.unlockedLocations.push('beach');
+      newUnlocks.push('LOC:beach');
+    }
+    if (progress.unlockedLocations.length >= 2) unlockAchievement('all_locations');
+    saveProgress(progress);
+    return newUnlocks;
+  }
+  best = parseInt(localStorage.getItem('socWalkBest') || '0', 10);
+  bestEl.textContent = best;
+
+  function reset() {
+    resize();
+    player = {
+      x: 0,
+      y: 0,
+      dir: 0,
+      speed: 0.09,
+      animFrame: 0,
+      turnCooldown: 0,
+      stimPhase: 0
+    };
+    camera = { x: 0, y: 0 };
+    npcs = [];
+    particles = [];
+    pathTrail = [];
+    friendlies = [];
+    friendlySpawnTimer = 4000 + Math.random() * 4000;
+    calmBuffEnd = 0;
+    score = 0;
+    dodges = 0;
+    gameTime = 0;
+    spawnTimer = 600;
+    masking = 100;
+    scoreEl.textContent = 0;
+    dodgesEl.textContent = 0;
+    maskFill.style.width = '100%';
+    overloadEl.classList.remove('fire');
+    currentRunStats = {
+      score: 0, dodges: 0, turns: 0,
+      timeSurvived: 0, distance: 0,
+      metFriendly: false, longestNoTurn: 0,
+      currentNoTurn: 0
+    };
+  }
+
+  // Spawn NPCs in world space, ahead of and around the player
+  // ====== FRIENDLY ENCOUNTERS ======
+  // Dog (Woody the cockapoo), coffee cart, fellow ND walker. Reward instead of catch.
+  const FRIENDLY_TYPES = ['dog', 'coffee', 'nod'];
+  function spawnFriendly() {
+    if (!player) return;
+    const pd = DIRS[player.dir];
+    const perpX = -pd.y;
+    const perpY = pd.x;
+    const aheadDist = 300 + Math.random() * 200;
+    const sideDist = (Math.random() - 0.5) * 180;
+    const fx = player.x + pd.x * aheadDist + perpX * sideDist;
+    const fy = player.y + pd.y * aheadDist + perpY * sideDist;
+    const type = FRIENDLY_TYPES[Math.floor(Math.random() * FRIENDLY_TYPES.length)];
+    friendlies.push({ x: fx, y: fy, type, met: false, anim: 0 });
+  }
+  function drawFriendly(f) {
+    const cx = Math.floor(wx(f.x));
+    const cy = Math.floor(wy(f.y));
+    if (cx < -50 || cx > W + 50 || cy < -50 || cy > H + 50) return;
+    f.anim += 0.05;
+    const bob = Math.sin(f.anim) * 1;
+
+    // Friendly glow ring (green = good)
+    const pulse = (Math.sin(f.anim * 1.5) + 1) * 0.5;
+    ctx.strokeStyle = `rgba(80, 220, 100, ${0.3 + pulse * 0.4})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 16 + pulse * 3, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (f.type === 'dog') {
+      // Brown cockapoo — Woody (shaggy/curly body)
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 6, 10, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Body — chocolate brown with shaggy outline
+      drawPixel(cx - 7, cy - 2 + bob, 14, 6, '#7a4a28');
+      drawPixel(cx - 7, cy - 2 + bob, 14, 1, '#9a6038');
+      drawPixel(cx - 7, cy + 3 + bob, 14, 1, '#5a3418');
+      // Shaggy curl bumps on top of body
+      const curlOff = Math.floor(Math.sin(f.anim * 2) * 1);
+      drawPixel(cx - 6, cy - 3 + bob + curlOff, 2, 1, '#9a6038');
+      drawPixel(cx - 2, cy - 3 + bob - curlOff, 2, 1, '#9a6038');
+      drawPixel(cx + 2, cy - 3 + bob + curlOff, 2, 1, '#9a6038');
+      // Head — chunkier, fluffier
+      drawPixel(cx + 5, cy - 6 + bob, 7, 6, '#7a4a28');
+      drawPixel(cx + 5, cy - 6 + bob, 7, 1, '#9a6038');
+      // Floppy curly ears (longer than retriever)
+      drawPixel(cx + 4, cy - 5 + bob, 2, 4, '#5a3418');
+      drawPixel(cx + 11, cy - 5 + bob, 2, 4, '#5a3418');
+      drawPixel(cx + 4, cy - 1 + bob, 1, 1, '#5a3418');
+      drawPixel(cx + 12, cy - 1 + bob, 1, 1, '#5a3418');
+      // Fluffy forehead tuft
+      drawPixel(cx + 7, cy - 7 + bob, 3, 1, '#9a6038');
+      // Eye
+      drawPixel(cx + 9, cy - 3 + bob, 1, 1, '#1a1a22');
+      // Nose - black button
+      drawPixel(cx + 11, cy - 1 + bob, 2, 1, '#1a1a22');
+      // Tail wagging - curlier
+      const wagX = Math.sin(f.anim * 5) * 2;
+      drawPixel(cx - 8, cy - 2 + bob + Math.floor(wagX), 2, 2, '#7a4a28');
+      drawPixel(cx - 9, cy - 3 + bob + Math.floor(wagX), 1, 1, '#9a6038');
+      // Legs - shaggy
+      drawPixel(cx - 5, cy + 4 + bob, 2, 3, '#5a3418');
+      drawPixel(cx + 3, cy + 4 + bob, 2, 3, '#5a3418');
+    } else if (f.type === 'coffee') {
+      // Coffee cart vendor — represented by steaming cup
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 5, 8, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Steam
+      const steamY = cy - 12 + Math.sin(f.anim * 2) * 2;
+      drawPixel(cx - 2, steamY, 1, 2, 'rgba(255,255,255,0.6)');
+      drawPixel(cx, steamY - 2, 1, 2, 'rgba(255,255,255,0.4)');
+      drawPixel(cx + 2, steamY, 1, 2, 'rgba(255,255,255,0.5)');
+      // Cup
+      drawPixel(cx - 4, cy - 6, 8, 8, '#e8e8e8');
+      drawPixel(cx - 4, cy - 6, 8, 1, '#c0c0c0');
+      drawPixel(cx - 4, cy + 1, 8, 1, '#a0a0a0');
+      // Coffee
+      drawPixel(cx - 3, cy - 5, 6, 1, '#4a2818');
+      // Sleeve
+      drawPixel(cx - 4, cy - 3, 8, 2, '#8b5a2b');
+      drawPixel(cx - 4, cy - 3, 8, 1, '#a06d35');
+    } else if (f.type === 'nod') {
+      // Fellow walker with headphones — silent nod NPC
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 10, 9, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Beanie
+      drawPixel(cx - 4, cy - 10 + Math.floor(bob), 8, 2, '#4a90a4');
+      drawPixel(cx - 6, cy - 8 + Math.floor(bob), 12, 2, '#4a90a4');
+      // Head
+      drawPixel(cx - 4, cy - 6 + Math.floor(bob), 8, 5, '#d4a574');
+      // Headphones (smaller)
+      drawPixel(cx - 7, cy - 5 + Math.floor(bob), 1, 4, '#1a1a22');
+      drawPixel(cx + 6, cy - 5 + Math.floor(bob), 1, 4, '#1a1a22');
+      // Body
+      drawPixel(cx - 5, cy - 1, 10, 5, '#4a4055');
+      drawPixel(cx - 4, cy + 4, 8, 1, '#3a3045');
+      // Legs
+      drawPixel(cx - 3, cy + 5, 3, 4, '#26262c');
+      drawPixel(cx + 1, cy + 5, 3, 4, '#26262c');
+    }
+  }
+  function tryMeetFriendly(f) {
+    if (f.met) return;
+    const dx = f.x - player.x, dy = f.y - player.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 28) {
+      f.met = true;
+      totalFriendliesMet++;
+      const messages = {
+        'dog': ['Woody!', '+200', 'Calm wave activated'],
+        'coffee': ['Hot coffee. Nice.', '+150', 'Caffeinated'],
+        'nod': ['Silent nod exchanged', '+100', 'Mutual understanding']
+      };
+      const msg = messages[f.type];
+      score += (f.type === 'dog' ? 200 : f.type === 'coffee' ? 150 : 100);
+      // Woody triggers a 5-second calm buff: slower world, smaller catch/bubble
+      if (f.type === 'dog') {
+        calmBuffEnd = performance.now() + 5000;
+      }
+      // Sparkle burst
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: f.x, y: f.y,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
+          life: 800,
+          color: ['#4ade80', '#ffee00', '#ffffff'][Math.floor(Math.random() * 3)]
+        });
+      }
+      if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+      showToast(msg[0], msg[1] + ' · ' + msg[2]);
+      unlockAchievement('first_friendly');
+      currentRunStats.friendliesMetInRun = (currentRunStats.friendliesMetInRun || 0) + 1;
+      if (f.type === 'dog') currentRunStats.metFriendly = true;
+    }
+  }
+
+  let currentRunStats = {};
+
+  function spawnNPC() {
+    const aheadDist = 300 + Math.random() * 200;
+    const sideDist = (Math.random() - 0.5) * Math.max(W, H) * 0.9;
+    const pd = DIRS[player.dir];
+    // Perpendicular vector
+    const perpX = -pd.y;
+    const perpY = pd.x;
+
+    const spawnX = player.x + pd.x * aheadDist + perpX * sideDist;
+    const spawnY = player.y + pd.y * aheadDist + perpY * sideDist;
+
+    // NPC walks broadly toward the player's general area to create encounters
+    const dx = player.x - spawnX;
+    const dy = player.y - spawnY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    let npcDir;
+    if (absX > absY) {
+      npcDir = dx > 0 ? 1 : 3;
+    } else {
+      npcDir = dy > 0 ? 2 : 0;
+    }
+    // Add randomness so they don't perfectly home in
+    if (Math.random() < 0.3) npcDir = (npcDir + (Math.random() < 0.5 ? 1 : 3)) % 4;
+
+    const outfit = getOutfit();
+    const acqMul = (outfit.mod && outfit.mod.acqChance) || 1;
+    const acqChance = Math.min(0.7, (0.25 + gameTime / 60000) * acqMul);
+    const isAcq = Math.random() < acqChance;
+
+    const strangerColors = [
+      { shirt: '#4a5d8c', hat: '#2d3a5c', skin: '#d4a574' },
+      { shirt: '#5c6b7a', hat: '#2c3540', skin: '#c89888' },
+      { shirt: '#6b5c7a', hat: '#3a2c45', skin: '#e0b89c' }
+    ];
+    const palette = isAcq
+      ? { shirt: '#ff2d95', hat: '#c91973', skin: '#ffd0c0' }
+      : strangerColors[Math.floor(Math.random() * strangerColors.length)];
+
+    // Small talk openers — the universal dread. English only.
+    const greetings = [
+      'HOW ARE YOU?',
+      'YOU ALRIGHT?',
+      'LONG TIME!',
+      'NICE WEATHER!',
+      'BUSY DAY?',
+      'HOWS WORK?',
+      'HOWS THE FAMILY?',
+      'YOU LOOK WELL!',
+      'WE MUST CATCH UP!',
+      'LOVELY DAY ISNT IT?',
+      'WHAT YOU BEEN UP TO?',
+      'HAVENT SEEN YOU IN AGES!',
+      'GOT A MINUTE?',
+      'FANCY A CHAT?',
+      'DID YOU HEAR?',
+      'YOU LOOK DIFFERENT!',
+      'STILL AT THE SAME PLACE?',
+      'HOWS THINGS?',
+      'ANY HOLIDAY PLANS?',
+      'TERRIBLE WEATHER!',
+      'WHATS NEW WITH YOU?',
+      'KEEPING BUSY?',
+      'HOWS LIFE TREATING YOU?',
+      'YOU MUST BE EXHAUSTED!',
+      'WE SHOULD GRAB A COFFEE!'
+    ];
+
+    npcs.push({
+      x: spawnX,
+      y: spawnY,
+      dir: npcDir,
+      isAcq,
+      speed: 0.04 + Math.random() * 0.03 + Math.min(0.05, gameTime / 80000),
+      animFrame: 0,
+      bubbleVisible: false,
+      passed: false,
+      palette,
+      greeting: isAcq ? greetings[Math.floor(Math.random() * greetings.length)] : null
+    });
+  }
+
+  // Convert world to screen
+  function wx(x) { return x - camera.x + W / 2; }
+  function wy(y) { return y - camera.y + H / 2; }
+
+  function drawPixel(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.floor(x), Math.floor(y), w, h);
+  }
+
+  function drawPlayer() {
+    const p = player;
+    const cx = Math.floor(wx(p.x));
+    const cy = Math.floor(wy(p.y));
+    const facing = p.dir;
+    const walk = Math.floor(p.animFrame) % 2;
+    const stim = Math.sin(p.stimPhase) * 1.5;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1.15, 1.15);
+    ctx.translate(-cx, -cy);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 11, 10, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const outfit = getOutfit();
+    const oid = outfit.id;
+
+    // ===== HEADWEAR (outfit-specific) =====
+    if (oid === 'hoodie') {
+      // Hood up - large overlapping shape covering more than beanie
+      drawPixel(cx - 8, cy - 12, 16, 3, outfit.hatShade);
+      drawPixel(cx - 9, cy - 10, 18, 3, outfit.hat);
+      drawPixel(cx - 8, cy - 7, 16, 2, outfit.hatShade);
+      // Hood inner shadow
+      drawPixel(cx - 5, cy - 7, 10, 1, darken(outfit.hatShade, 20));
+    } else if (oid === 'tourist') {
+      // Bucket hat - wide brim, flat top
+      drawPixel(cx - 9, cy - 8, 18, 2, outfit.hat);  // wide brim
+      drawPixel(cx - 6, cy - 11, 12, 3, outfit.hat); // crown
+      drawPixel(cx - 6, cy - 8, 12, 1, outfit.hatShade);
+      drawPixel(cx - 5, cy - 10, 10, 1, lighten(outfit.hat, 15));
+    } else if (oid === 'gymrat') {
+      // Sweatband - thin strip, no crown
+      drawPixel(cx - 6, cy - 10, 12, 2, outfit.hat);
+      drawPixel(cx - 5, cy - 11, 10, 1, lighten(outfit.hat, 25));
+      // Hair tuft visible above band
+      drawPixel(cx - 4, cy - 12, 8, 1, '#3a2614');
+    } else if (oid === 'office') {
+      // Slicked hair - dark, smooth
+      drawPixel(cx - 5, cy - 11, 10, 1, '#1a1a22');
+      drawPixel(cx - 6, cy - 10, 12, 2, '#26262c');
+      drawPixel(cx - 5, cy - 9, 10, 1, '#1a1a22');
+      // Side part highlight
+      drawPixel(cx - 3, cy - 10, 1, 2, '#5a5a62');
+    } else {
+      // Default beanie (also for shades, influencer)
+      drawPixel(cx - 5, cy - 11, 10, 2, outfit.hat);
+      drawPixel(cx - 7, cy - 9, 14, 2, outfit.hat);
+      drawPixel(cx - 6, cy - 7, 12, 1, outfit.hatShade);
+      drawPixel(cx - 6, cy - 8, 12, 1, lighten(outfit.hat, 20));
+      // Beanie pom for influencer
+      if (oid === 'influencer') {
+        drawPixel(cx - 1, cy - 13, 2, 2, lighten(outfit.hat, 30));
+      }
+    }
+
+    // Headphones — chunky over-ear style, dark navy with red LED
+    // Left ear cup (bigger)
+    drawPixel(cx - 10, cy - 7, 3, 6, '#1f2840');
+    drawPixel(cx - 10, cy - 8, 3, 1, '#3a4868');
+    drawPixel(cx - 8, cy - 6, 1, 4, '#0e1424');
+    // Right ear cup (bigger)
+    drawPixel(cx + 7, cy - 7, 3, 6, '#1f2840');
+    drawPixel(cx + 7, cy - 8, 3, 1, '#3a4868');
+    drawPixel(cx + 7, cy - 6, 1, 4, '#0e1424');
+    // Headband connecting over the top
+    drawPixel(cx - 7, cy - 11, 14, 1, '#1f2840');
+    drawPixel(cx - 8, cy - 10, 16, 1, '#1f2840');
+    // Tiny power LED on the left cup
+    drawPixel(cx - 10, cy - 4, 1, 1, '#d63b3b');
+
+    // Skin
+    drawPixel(cx - 5, cy - 6, 10, 5, outfit.skin);
+    drawPixel(cx + 3, cy - 6, 2, 5, outfit.skinShade);
+
+    // Coat (outfit colour)
+    drawPixel(cx - 7, cy - 1, 14, 5, outfit.shirt);
+    drawPixel(cx - 6, cy + 4, 12, 1, darken(outfit.shirtShade, 12));
+    drawPixel(cx + 4, cy - 1, 3, 5, outfit.shirtShade);
+    drawPixel(cx - 6, cy - 1, 1, 5, lighten(outfit.shirt, 18));
+    // Collar / corduroy detail
+    drawPixel(cx - 6, cy - 1, 12, 1, outfit.shirtShade);
+    // Chest pocket flap
+    drawPixel(cx - 4, cy + 1, 3, 1, outfit.shirtShade);
+
+    // Arms — skin tone, with stim
+    if (walk === 0) {
+      drawPixel(cx - 9, cy + 1 + stim, 2, 3, outfit.skin);
+      drawPixel(cx + 7, cy - 1 - stim, 2, 3, outfit.skin);
+    } else {
+      drawPixel(cx - 9, cy - 1 - stim, 2, 3, outfit.skin);
+      drawPixel(cx + 7, cy + 1 + stim, 2, 3, outfit.skin);
+    }
+
+    // Trousers — outfit-driven
+    if (walk === 0) {
+      drawPixel(cx - 4, cy + 5, 3, 4, outfit.trouser);
+      drawPixel(cx + 1, cy + 7, 3, 4, outfit.trouser);
+    } else {
+      drawPixel(cx - 4, cy + 7, 3, 4, outfit.trouser);
+      drawPixel(cx + 1, cy + 5, 3, 4, outfit.trouser);
+    }
+
+    // ===== OUTFIT ACCESSORIES =====
+    if (oid === 'shades') {
+      // Sunglasses - dark bar across face
+      drawPixel(cx - 4, cy - 5, 8, 2, '#0a0a12');
+      // Lens highlights
+      drawPixel(cx - 3, cy - 5, 2, 1, '#3a3a48');
+      drawPixel(cx + 1, cy - 5, 2, 1, '#3a3a48');
+      // Bridge
+      drawPixel(cx, cy - 5, 1, 1, '#1a1a22');
+    } else if (oid === 'office') {
+      // Briefcase in left hand (always visible)
+      const bx = cx - 12;
+      const by = cy + 2 + (walk === 0 ? Math.floor(stim) : -Math.floor(stim));
+      drawPixel(bx, by, 5, 6, '#1a1a22');
+      drawPixel(bx, by, 5, 1, '#3a3a48');
+      drawPixel(bx + 1, by - 1, 3, 1, '#1a1a22');  // handle
+      drawPixel(bx + 2, by + 2, 1, 1, '#d4af37');  // gold latch
+    } else if (oid === 'tourist') {
+      // Camera around neck (square hanging on chest)
+      drawPixel(cx - 2, cy + 2, 5, 3, '#1a1a22');
+      drawPixel(cx - 1, cy + 3, 3, 1, '#3a4868');  // lens
+      drawPixel(cx, cy + 3, 1, 1, '#5a8aa8');      // glass highlight
+      // Bumbag at waist
+      drawPixel(cx - 5, cy + 4, 4, 2, outfit.accent);
+      drawPixel(cx - 5, cy + 4, 4, 1, lighten(outfit.accent, 20));
+    } else if (oid === 'gymrat') {
+      // Sweat drops
+      const sweatY = cy - 4 + Math.floor((player.stimPhase * 3) % 4);
+      drawPixel(cx - 7, sweatY, 1, 2, '#a0e8ff');
+      drawPixel(cx + 6, sweatY + 2, 1, 2, '#a0e8ff');
+      // Bicep highlight - small muscle definition on arms
+      drawPixel(cx - 9, cy + 2, 1, 1, lighten(outfit.skin, 30));
+      drawPixel(cx + 8, cy + 2, 1, 1, lighten(outfit.skin, 30));
+    } else if (oid === 'influencer') {
+      // Phone held out (selfie pose)
+      const ph = walk === 0 ? Math.floor(stim) : -Math.floor(stim);
+      drawPixel(cx + 9, cy + ph, 3, 5, '#1a1a22');
+      drawPixel(cx + 10, cy + 1 + ph, 1, 3, '#00f0ff'); // screen
+      // Ring light glow around phone
+      ctx.fillStyle = 'rgba(255, 255, 200, 0.4)';
+      ctx.beginPath();
+      ctx.arc(cx + 10, cy + 2 + ph, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (oid === 'hoodie') {
+      // Hood shadow on face for that "barely visible" look
+      drawPixel(cx - 4, cy - 6, 8, 1, darken(outfit.skin, 30));
+      drawPixel(cx - 3, cy - 5, 6, 1, darken(outfit.skin, 20));
+    }
+
+    const dirX = DIRS[facing].x;
+    const dirY = DIRS[facing].y;
+    const tipX = cx + dirX * 18;
+    const tipY = cy + dirY * 18;
+    ctx.fillStyle = '#26262c';
+    ctx.beginPath();
+    if (facing === 0) {
+      ctx.moveTo(tipX, tipY - 1); ctx.lineTo(tipX - 6, tipY + 6); ctx.lineTo(tipX + 6, tipY + 6);
+    } else if (facing === 2) {
+      ctx.moveTo(tipX, tipY + 1); ctx.lineTo(tipX - 6, tipY - 6); ctx.lineTo(tipX + 6, tipY - 6);
+    } else if (facing === 1) {
+      ctx.moveTo(tipX + 1, tipY); ctx.lineTo(tipX - 6, tipY - 6); ctx.lineTo(tipX - 6, tipY + 6);
+    } else {
+      ctx.moveTo(tipX - 1, tipY); ctx.lineTo(tipX + 6, tipY - 6); ctx.lineTo(tipX + 6, tipY + 6);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e0d8c0';
+    ctx.beginPath();
+    if (facing === 0) {
+      ctx.moveTo(tipX, tipY + 1); ctx.lineTo(tipX - 4, tipY + 5); ctx.lineTo(tipX + 4, tipY + 5);
+    } else if (facing === 2) {
+      ctx.moveTo(tipX, tipY - 1); ctx.lineTo(tipX - 4, tipY - 5); ctx.lineTo(tipX + 4, tipY - 5);
+    } else if (facing === 1) {
+      ctx.moveTo(tipX - 1, tipY); ctx.lineTo(tipX - 5, tipY - 4); ctx.lineTo(tipX - 5, tipY + 4);
+    } else {
+      ctx.moveTo(tipX + 1, tipY); ctx.lineTo(tipX + 5, tipY - 4); ctx.lineTo(tipX + 5, tipY + 4);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawNPC(n) {
+    const cx = Math.floor(wx(n.x));
+    const cy = Math.floor(wy(n.y));
+
+    // Cull off-screen (margin slightly larger for scaled characters)
+    if (cx < -50 || cx > W + 50 || cy < -50 || cy > H + 50) return;
+
+    const walk = Math.floor(n.animFrame) % 2;
+    const pal = n.palette;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1.15, 1.15);
+    ctx.translate(-cx, -cy);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 10, 9, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    drawPixel(cx - 4, cy - 10, 8, 2, pal.hat);
+    drawPixel(cx - 6, cy - 8, 12, 2, pal.hat);
+    drawPixel(cx - 4, cy - 6, 8, 5, pal.skin);
+    drawPixel(cx - 6, cy - 1, 12, 5, pal.shirt);
+    drawPixel(cx - 5, cy + 4, 10, 1, pal.hat);
+
+    if (walk === 0) {
+      drawPixel(cx - 8, cy + 1, 2, 3, pal.skin);
+      drawPixel(cx + 6, cy - 1, 2, 3, pal.skin);
+    } else {
+      drawPixel(cx - 8, cy - 1, 2, 3, pal.skin);
+      drawPixel(cx + 6, cy + 1, 2, 3, pal.skin);
+    }
+
+    const legColor = n.isAcq ? '#ffee00' : '#1a0033';
+    if (walk === 0) {
+      drawPixel(cx - 3, cy + 5, 3, 4, legColor);
+      drawPixel(cx + 1, cy + 7, 3, 4, legColor);
+    } else {
+      drawPixel(cx - 3, cy + 7, 3, 4, legColor);
+      drawPixel(cx + 1, cy + 5, 3, 4, legColor);
+    }
+
+    if (n.isAcq) {
+      const pulse = (Math.sin(n.animFrame * 1.2) + 1) * 0.5;
+      ctx.strokeStyle = `rgba(255, 45, 149, ${0.3 + pulse * 0.4})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14 + pulse * 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    if (n.isAcq && n.bubbleVisible && n.greeting) {
+      // Measure text to size the bubble
+      ctx.font = 'bold 8px "Press Start 2P", monospace';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      const textWidth = Math.max(28, ctx.measureText(n.greeting).width + 10);
+      const bubW = Math.floor(textWidth);
+      const bubH = 16;
+      const bubX = cx + 12;
+      const bubY = cy - 26;
+
+      // Bubble shadow / outline
+      ctx.fillStyle = '#1a0033';
+      ctx.fillRect(bubX - 2, bubY - 2, bubW + 4, bubH + 4);
+      // Fill
+      ctx.fillStyle = '#ffee00';
+      ctx.fillRect(bubX, bubY, bubW, bubH);
+      // Tail
+      ctx.fillStyle = '#1a0033';
+      ctx.fillRect(bubX - 4, bubY + 8, 2, 2);
+      ctx.fillStyle = '#ffee00';
+      ctx.fillRect(bubX - 2, bubY + 10, 2, 2);
+      // Text
+      ctx.fillStyle = '#c91973';
+      ctx.fillText(n.greeting, bubX + bubW / 2, bubY + bubH / 2 + 1);
+    }
+  }
+
+  // Helper used by both park features and feature drawing
+  function px(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.floor(x), Math.floor(y), w, h);
+  }
+
+  // ===== Park features =====
+  function drawTree(cx, cy) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 4, 14, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Trunk
+    px(cx - 2, cy - 6, 4, 12, '#6b4423');
+    px(cx - 2, cy - 6, 1, 12, '#4a2e16');
+    // Foliage — chunky pixel canopy
+    px(cx - 10, cy - 18, 20, 8, '#2d5a1f');
+    px(cx - 12, cy - 14, 24, 6, '#2d5a1f');
+    px(cx - 8, cy - 22, 16, 6, '#2d5a1f');
+    // Highlights
+    px(cx - 6, cy - 20, 4, 2, '#4a8a35');
+    px(cx + 2, cy - 16, 4, 2, '#4a8a35');
+    px(cx - 8, cy - 12, 3, 2, '#4a8a35');
+    // Darker shadow side
+    px(cx + 6, cy - 14, 4, 6, '#1f3d14');
+  }
+
+  function drawBush(cx, cy) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 2, 10, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Bush body
+    px(cx - 8, cy - 6, 16, 8, '#2d5a1f');
+    px(cx - 10, cy - 4, 20, 6, '#2d5a1f');
+    px(cx - 6, cy - 8, 12, 3, '#2d5a1f');
+    // Highlights
+    px(cx - 5, cy - 6, 3, 2, '#4a8a35');
+    px(cx + 2, cy - 4, 3, 2, '#4a8a35');
+  }
+
+  function drawBench(cx, cy) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(cx - 14, cy + 2, 28, 2);
+    // Legs
+    px(cx - 12, cy - 4, 2, 8, '#1a1a1a');
+    px(cx + 10, cy - 4, 2, 8, '#1a1a1a');
+    // Seat
+    px(cx - 14, cy - 6, 28, 3, '#8b5a3c');
+    px(cx - 14, cy - 6, 28, 1, '#a87248');
+    // Backrest slats
+    px(cx - 12, cy - 14, 24, 2, '#8b5a3c');
+    px(cx - 12, cy - 10, 24, 2, '#8b5a3c');
+    // Backrest supports
+    px(cx - 12, cy - 14, 2, 8, '#1a1a1a');
+    px(cx + 10, cy - 14, 2, 8, '#1a1a1a');
+  }
+
+  function drawLampPost(cx, cy) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 2, 4, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Post
+    px(cx - 1, cy - 26, 2, 28, '#2a2a2a');
+    // Base
+    px(cx - 3, cy, 6, 3, '#1a1a1a');
+    // Lamp head
+    px(cx - 3, cy - 30, 6, 4, '#2a2a2a');
+    px(cx - 4, cy - 32, 8, 2, '#2a2a2a');
+    // Bulb glow
+    px(cx - 2, cy - 29, 4, 3, '#fff0a0');
+    px(cx - 1, cy - 28, 2, 1, '#ffffff');
+  }
+
+  function drawBeach() {
+    // Sandy base
+    ctx.fillStyle = '#e8c878';
+    ctx.fillRect(0, 0, W, H);
+
+    const tile = 24;
+    const startWorldX = camera.x - W / 2;
+    const startWorldY = camera.y - H / 2;
+    const offsetX = ((startWorldX % tile) + tile) % tile;
+    const offsetY = ((startWorldY % tile) + tile) % tile;
+
+    // Sand texture: lighter and darker speckles + occasional small footprints
+    for (let sy = -tile - offsetY; sy < H + tile; sy += tile) {
+      for (let sx = -tile - offsetX; sx < W + tile; sx += tile) {
+        const worldX = Math.floor((startWorldX + sx + offsetX) / tile);
+        const worldY = Math.floor((startWorldY + sy + offsetY) / tile);
+        const hash = (worldX * 73856093) ^ (worldY * 19349663);
+        const r = ((hash & 0xff) / 255);
+        if (r < 0.22) {
+          ctx.fillStyle = '#d8b660';
+          ctx.fillRect(sx + ((hash >> 8) & 0xf), sy + ((hash >> 12) & 0xf), 3, 3);
+        } else if (r < 0.4) {
+          ctx.fillStyle = '#f4d890';
+          ctx.fillRect(sx + ((hash >> 8) & 0xf), sy + ((hash >> 12) & 0xf), 2, 2);
+        }
+        // Tiny shell or pebble
+        if ((hash & 0xff) === 7) {
+          ctx.fillStyle = ['#ffffff', '#c0a880', '#9b7050'][(hash >> 16) & 3];
+          ctx.fillRect(sx + ((hash >> 4) & 0x1f), sy + ((hash >> 9) & 0x1f), 2, 1);
+        }
+      }
+    }
+
+    // Diagonal sea band (top-right corner area) - parallax distant
+    const seaY = Math.floor(H * 0.18 - (camera.y * 0.15) % 60);
+    ctx.fillStyle = '#3aa0c8';
+    ctx.fillRect(0, 0, W, Math.max(0, seaY));
+    // Wet sand strip between sea and dry sand
+    ctx.fillStyle = '#c8a058';
+    ctx.fillRect(0, seaY, W, 6);
+    // Foam line
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    for (let fx = -((camera.x * 0.3) % 16); fx < W; fx += 16) {
+      ctx.fillRect(fx, seaY - 1, 8, 2);
+    }
+    // Subtle wave shimmer
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    for (let wy = 4; wy < seaY; wy += 8) {
+      const wave = Math.sin((wy + camera.x * 0.1) * 0.05) * 6;
+      ctx.fillRect(((camera.x * 0.2) % 24) + wave, wy, 14, 1);
+      ctx.fillRect(W - 40 + wave, wy + 4, 12, 1);
+    }
+
+    // Path trail (yellow sparkles)
+    pathTrail.forEach((p, i) => {
+      const alpha = i / pathTrail.length;
+      ctx.fillStyle = `rgba(255, 238, 0, ${alpha * 0.25})`;
+      ctx.fillRect(wx(p.x) - 1, wy(p.y) - 1, 2, 2);
+    });
+    particles.forEach(part => {
+      ctx.fillStyle = part.color;
+      ctx.fillRect(wx(part.x), wy(part.y), 2, 2);
+    });
+
+    // Beach features: parasols, deckchairs, beach balls, ice cream van rare
+    const featureTile = 220;
+    const fStartX = Math.floor(startWorldX / featureTile) - 1;
+    const fStartY = Math.floor(startWorldY / featureTile) - 1;
+    for (let fy = 0; fy < Math.ceil(H / featureTile) + 2; fy++) {
+      for (let fx = 0; fx < Math.ceil(W / featureTile) + 2; fx++) {
+        const cellX = fStartX + fx;
+        const cellY = fStartY + fy;
+        const hash = (cellX * 73856093) ^ (cellY * 19349663) ^ 0x67890;
+        const r = ((hash & 0xffff) / 0xffff);
+        if (r < 0.45) {
+          const offX = ((hash >> 4) & 0xff) / 255 * featureTile;
+          const offY = ((hash >> 12) & 0xff) / 255 * featureTile;
+          const worldX = cellX * featureTile + offX;
+          const worldY = cellY * featureTile + offY;
+          const sx_ = worldX - startWorldX;
+          const sy_ = worldY - camera.y + H / 2;
+          if (sx_ < -50 || sx_ > W + 50 || sy_ < -50 || sy_ > H + 50) continue;
+          const ft = (hash >> 20) & 0x7;
+          if (ft <= 2) drawParasol(sx_, sy_, hash);
+          else if (ft <= 4) drawDeckchair(sx_, sy_, hash);
+          else if (ft <= 6) drawBeachBall(sx_, sy_, hash);
+          else drawSandcastle(sx_, sy_);
+        }
+      }
+    }
+  }
+
+  function drawParasol(cx, cy, hash) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    const stripes = [['#e84048', '#f4ece0'], ['#3a8aa0', '#f4ece0'], ['#f4c430', '#e84048'], ['#5a3a8a', '#f4ece0']];
+    const pair = stripes[hash % stripes.length];
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(cx + 6, cy + 4, 14, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Pole
+    px(cx - 1, cy - 18, 2, 22, '#5a3a18');
+    // Parasol canopy (alternating stripes)
+    px(cx - 14, cy - 18, 28, 4, pair[0]);
+    px(cx - 12, cy - 18, 4, 4, pair[1]);
+    px(cx - 4, cy - 18, 4, 4, pair[1]);
+    px(cx + 4, cy - 18, 4, 4, pair[1]);
+    // Bottom curve
+    px(cx - 12, cy - 14, 24, 2, pair[0]);
+    px(cx - 10, cy - 14, 4, 2, pair[1]);
+    px(cx - 2, cy - 14, 4, 2, pair[1]);
+    px(cx + 6, cy - 14, 4, 2, pair[1]);
+    // Pointy top
+    px(cx - 1, cy - 20, 2, 2, pair[0]);
+    // Tip below pole
+    px(cx, cy + 4, 1, 1, '#5a3a18');
+  }
+
+  function drawDeckchair(cx, cy, hash) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    const colors = ['#e84048', '#3a8aa0', '#f4c430', '#5a8a3a', '#a05aa0'];
+    const c = colors[hash % colors.length];
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(cx - 8, cy + 4, 16, 2);
+    // Wooden frame back
+    px(cx - 7, cy - 14, 2, 16, '#7a4818');
+    px(cx + 5, cy - 14, 2, 16, '#7a4818');
+    // Fabric back (striped)
+    px(cx - 5, cy - 13, 10, 12, c);
+    px(cx - 5, cy - 11, 10, 1, '#f4ece0');
+    px(cx - 5, cy - 7, 10, 1, '#f4ece0');
+    px(cx - 5, cy - 3, 10, 1, '#f4ece0');
+    // Seat
+    px(cx - 6, cy, 12, 3, '#7a4818');
+    px(cx - 5, cy + 1, 10, 1, c);
+    // Legs
+    px(cx - 6, cy + 3, 2, 2, '#5a3818');
+    px(cx + 4, cy + 3, 2, 2, '#5a3818');
+  }
+
+  function drawBeachBall(cx, cy, hash) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 5, 6, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Ball (pink/cyan/yellow segments)
+    const colors = [['#ff2d95', '#00f0ff', '#ffee00'], ['#e84048', '#f4ece0', '#3a8aa0'], ['#ffffff', '#ff2d95', '#3a8aa0']];
+    const set = colors[hash % colors.length];
+    px(cx - 5, cy - 4, 10, 8, set[0]);
+    px(cx - 5, cy - 4, 4, 8, set[1]);
+    px(cx + 1, cy - 4, 4, 8, set[2]);
+    // White cap
+    px(cx - 1, cy - 5, 2, 1, '#ffffff');
+    px(cx - 2, cy - 4, 4, 1, '#ffffff');
+    // Highlight
+    px(cx - 4, cy - 3, 1, 1, 'rgba(255,255,255,0.6)');
+  }
+
+  function drawSandcastle(cx, cy) {
+    cx = Math.floor(cx); cy = Math.floor(cy);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(cx - 9, cy + 4, 18, 2);
+    // Base
+    px(cx - 8, cy - 2, 16, 6, '#c89858');
+    px(cx - 8, cy + 3, 16, 1, '#a07838');
+    px(cx - 8, cy - 2, 16, 1, '#e8b878');
+    // Two towers
+    px(cx - 8, cy - 8, 5, 6, '#c89858');
+    px(cx + 3, cy - 8, 5, 6, '#c89858');
+    px(cx - 8, cy - 8, 5, 1, '#e8b878');
+    px(cx + 3, cy - 8, 5, 1, '#e8b878');
+    // Crenellations
+    px(cx - 8, cy - 9, 1, 1, '#c89858');
+    px(cx - 6, cy - 9, 1, 1, '#c89858');
+    px(cx - 4, cy - 9, 1, 1, '#c89858');
+    px(cx + 3, cy - 9, 1, 1, '#c89858');
+    px(cx + 5, cy - 9, 1, 1, '#c89858');
+    px(cx + 7, cy - 9, 1, 1, '#c89858');
+    // Centre flag
+    px(cx - 1, cy - 10, 1, 6, '#5a3a18');
+    px(cx, cy - 10, 3, 2, '#e84048');
+    // Door
+    px(cx - 1, cy + 1, 2, 3, '#5a3a18');
+  }
+
+  function drawScene() {
+    if (currentLocation === 'beach') {
+      drawBeach();
+      return;
+    }
+    ctx.fillStyle = '#5a8a3a';
+    ctx.fillRect(0, 0, W, H);
+
+    const tile = 24;
+    const startWorldX = camera.x - W / 2;
+    const startWorldY = camera.y - H / 2;
+    const offsetX = ((startWorldX % tile) + tile) % tile;
+    const offsetY = ((startWorldY % tile) + tile) % tile;
+
+    // Grass texture: small darker and lighter clumps based on world position (deterministic)
+    for (let sy = -tile - offsetY; sy < H + tile; sy += tile) {
+      for (let sx = -tile - offsetX; sx < W + tile; sx += tile) {
+        const worldX = Math.floor((startWorldX + sx + offsetX) / tile);
+        const worldY = Math.floor((startWorldY + sy + offsetY) / tile);
+        // Pseudo-random hash from world coords — same tile always looks the same
+        const hash = (worldX * 73856093) ^ (worldY * 19349663);
+        const r = ((hash & 0xffff) / 0xffff);
+
+        // Sub-tile grass clumps
+        if (r < 0.2) {
+          // Lighter clump
+          ctx.fillStyle = '#6fa148';
+          ctx.fillRect(sx + 2, sy + 4, 6, 2);
+          ctx.fillRect(sx + 14, sy + 12, 4, 2);
+        } else if (r < 0.4) {
+          // Darker clump
+          ctx.fillStyle = '#436b2a';
+          ctx.fillRect(sx + 6, sy + 10, 4, 2);
+          ctx.fillRect(sx + 16, sy + 4, 3, 2);
+        } else if (r < 0.5) {
+          // Tiny flower (yellow dandelion or daisy)
+          const flowerColor = (hash & 0x100) ? '#ffee00' : '#ffffff';
+          ctx.fillStyle = flowerColor;
+          ctx.fillRect(sx + ((hash >> 8) & 0xf) + 4, sy + ((hash >> 12) & 0xf) + 4, 2, 2);
+        }
+
+        // Tiny grass blades for texture
+        if ((hash & 0x7) === 0) {
+          ctx.fillStyle = '#436b2a';
+          ctx.fillRect(sx + ((hash >> 4) & 0x1f) % tile, sy + ((hash >> 9) & 0x1f) % tile, 1, 2);
+        }
+      }
+    }
+
+    // Park path — a winding sandy-coloured strip the player roughly follows
+    // We draw the path as a series of overlapping circles along a sinusoidal curve in world space
+    const pathColor = '#c9a86a';
+    const pathEdge = '#9c7c44';
+    const pathWidth = 64;
+    // Path runs along the player's general direction of travel — we draw it relative to camera position
+    // Use a wide horizontal band that gently waves up and down based on world X
+    for (let screenX = -20; screenX < W + 20; screenX += 8) {
+      const worldX = startWorldX + screenX;
+      // Two overlapping sine waves for organic feel
+      const pathCenterWorldY = Math.sin(worldX * 0.005) * 80 + Math.sin(worldX * 0.013) * 30;
+      const pathCenterScreenY = pathCenterWorldY - camera.y + H / 2;
+      // Edge
+      ctx.fillStyle = pathEdge;
+      ctx.fillRect(screenX, pathCenterScreenY - pathWidth / 2 - 2, 8, pathWidth + 4);
+      // Fill
+      ctx.fillStyle = pathColor;
+      ctx.fillRect(screenX, pathCenterScreenY - pathWidth / 2, 8, pathWidth);
+    }
+
+    // Subtle path texture — small pebbles
+    for (let i = 0; i < 40; i++) {
+      const wx_ = startWorldX + (i * 137 + Math.floor(camera.x * 0.3)) % W;
+      const wy_ = Math.sin((wx_ + startWorldX) * 0.005) * 80 + Math.sin((wx_ + startWorldX) * 0.013) * 30 + ((i * 211) % 60) - 30;
+      const sx_ = wx_ - startWorldX;
+      const sy_ = wy_ - camera.y + H / 2;
+      if (sx_ > 0 && sx_ < W && sy_ > 0 && sy_ < H) {
+        ctx.fillStyle = (i % 3 === 0) ? '#8a6840' : '#b8956a';
+        ctx.fillRect(sx_, sy_, 2, 2);
+      }
+    }
+
+    // Occasional bench, lamp post, or tree (deterministic per area)
+    const featureTile = 200;
+    const fStartX = Math.floor(startWorldX / featureTile) - 1;
+    const fStartY = Math.floor(startWorldY / featureTile) - 1;
+    for (let fy = 0; fy < Math.ceil(H / featureTile) + 2; fy++) {
+      for (let fx = 0; fx < Math.ceil(W / featureTile) + 2; fx++) {
+        const cellX = fStartX + fx;
+        const cellY = fStartY + fy;
+        const hash = (cellX * 73856093) ^ (cellY * 19349663) ^ 0x12345;
+        const r = ((hash & 0xffff) / 0xffff);
+        // Roughly one feature per featureTile cell, offset within
+        if (r < 0.35) {
+          const offX = ((hash >> 4) & 0xff) / 255 * featureTile;
+          const offY = ((hash >> 12) & 0xff) / 255 * featureTile;
+          const worldX = cellX * featureTile + offX;
+          const worldY = cellY * featureTile + offY;
+          const sx_ = worldX - startWorldX;
+          const sy_ = worldY - camera.y + H / 2;
+          if (sx_ < -30 || sx_ > W + 30 || sy_ < -30 || sy_ > H + 30) continue;
+
+          const featureType = (hash >> 20) & 0x3;
+          if (featureType === 0) drawTree(sx_, sy_);
+          else if (featureType === 1) drawBench(sx_, sy_);
+          else if (featureType === 2) drawLampPost(sx_, sy_);
+          else drawBush(sx_, sy_);
+        }
+      }
+    }
+
+    // Park features rendered inside drawScene via deterministic hashing
+
+    // Path trail (world space)
+    pathTrail.forEach((p, i) => {
+      const alpha = i / pathTrail.length;
+      ctx.fillStyle = `rgba(255, 238, 0, ${alpha * 0.4})`;
+      ctx.fillRect(wx(p.x) - 1, wy(p.y) - 1, 2, 2);
+    });
+
+    // Particles (world space)
+    particles.forEach(part => {
+      ctx.fillStyle = part.color;
+      ctx.fillRect(wx(part.x), wy(part.y), 2, 2);
+    });
+  }
+
+  function turn() {
+    if (!running) return;
+    if (player.turnCooldown > 0) return;
+    player.dir = (player.dir + 1) % 4;
+    player.turnCooldown = 80;
+    currentRunStats.turns = (currentRunStats.turns || 0) + 1;
+    currentRunStats.currentNoTurn = 0;
+    for (let i = 0; i < 6; i++) {
+      particles.push({
+        x: player.x + (Math.random() - 0.5) * 20,
+        y: player.y + (Math.random() - 0.5) * 20,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        life: 400,
+        color: ['#ff2d95', '#ffee00', '#00f0ff'][Math.floor(Math.random() * 3)]
+      });
+    }
+    if (navigator.vibrate) navigator.vibrate(15);
+  }
+
+  function checkCollisions() {
+    let nearAcq = false;
+    const outfit = getOutfit();
+    const calmActive = performance.now() < calmBuffEnd;
+    const calmRangeMul = calmActive ? 0.7 : 1;
+    const bubbleMul = ((outfit.mod && outfit.mod.bubbleRange) || 1) * calmRangeMul;
+    const catchMul = ((outfit.mod && outfit.mod.catchRange) || 1) * calmRangeMul;
+    const bubbleRange = 104 * bubbleMul;
+    const catchRange = 35 * catchMul;
+    const dodgeRange = 70 * bubbleMul;
+
+    for (const n of npcs) {
+      if (n.passed) continue;
+      const dx = n.x - player.x;
+      const dy = n.y - player.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (n.isAcq && dist < bubbleRange) {
+        // Trigger voice on the first frame this talker becomes visible
+        if (!n.bubbleVisible) {
+          playTalkerVoice();
+        }
+        n.bubbleVisible = true;
+        nearAcq = true;
+      }
+
+      if (n.isAcq && dist < catchRange) {
+        gameOver();
+        return;
+      }
+
+      if (n.isAcq && !n.passed && dist > dodgeRange && n.bubbleVisible) {
+        const pdir = DIRS[player.dir];
+        const dot = dx * pdir.x + dy * pdir.y;
+        if (dot < -35) {
+          n.passed = true;
+          dodges++;
+          score += 50;
+          dodgesEl.textContent = dodges;
+          for (let i = 0; i < 12; i++) {
+            particles.push({
+              x: player.x,
+              y: player.y,
+              vx: (Math.random() - 0.5) * 4,
+              vy: (Math.random() - 0.5) * 4,
+              life: 600,
+              color: ['#ff2d95', '#ffee00', '#00f0ff'][Math.floor(Math.random() * 3)]
+            });
+          }
+        }
+      }
+    }
+
+    if (nearAcq) masking = Math.max(0, masking - 0.4);
+    else masking = Math.min(100, masking + 0.15);
+    maskFill.style.width = masking + '%';
+  }
+
+  function playOverloadSound() {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      [220, 233, 247, 277].forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(freq, now);
+        o.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.8);
+        g.gain.setValueAtTime(0.15, now + i * 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(now + i * 0.05); o.stop(now + 1);
+      });
+    } catch(e) {}
+  }
+
+  function gameOver() {
+    running = false;
+
+    stopSoundtrack();
+
+    overloadEl.classList.remove('fire');
+    void overloadEl.offsetWidth;
+    overloadEl.classList.add('fire');
+
+    playOverloadSound();
+    if (navigator.vibrate) navigator.vibrate([60, 40, 80, 40, 120]);
+
+    // Update progress
+    progress.totalRuns = (progress.totalRuns || 0) + 1;
+    progress.totalDodges = (progress.totalDodges || 0) + dodges;
+    const locBestKey = currentLocation === 'beach' ? 'bestBeach' : 'bestPark';
+    if (score > (progress[locBestKey] || 0)) progress[locBestKey] = Math.floor(score);
+    saveProgress(progress);
+
+    if (score > best) {
+      best = Math.floor(score);
+      localStorage.setItem('socWalkBest', best);
+      bestEl.textContent = best;
+    }
+
+    // Achievements
+    unlockAchievement('first_caught');
+    if (progress.totalRuns >= 150) unlockAchievement('caught_50');
+    if (dodges >= 25) unlockAchievement('dodge_10_run');
+    if (score >= 1500) unlockAchievement('reach_500');
+    if (score >= 3500) unlockAchievement('reach_1000');
+
+    // Daily challenge check
+    const daily = getDaily();
+    let dailyJustDone = false;
+    if (!progress.dailyDone && daily.check(currentRunStats)) {
+      progress.dailyDone = true;
+      progress.dailyCount = (progress.dailyCount || 0) + 1;
+      saveProgress(progress);
+      unlockAchievement('daily_first');
+      dailyJustDone = true;
+    }
+
+    // Outfit / location unlocks
+    const newUnlocks = checkOutfitUnlocks(currentRunStats);
+
+    setTimeout(() => {
+      const messages = [
+        '"Oh hi! How ARE you?"',
+        '"We MUST catch up properly!"',
+        '"Did you hear about Sharon?"',
+        '"You look so DIFFERENT!"',
+        '"What you been up to then?"',
+        '"Wow, haven\'t seen you in AGES!"'
+      ];
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+
+      let unlockHTML = '';
+      if (dailyJustDone) {
+        unlockHTML += `<div style="background:#4ade80;color:#0a0015;padding:6px 10px;font-size:8px;margin:8px 0;border:2px solid var(--shadow);letter-spacing:1px;">★ DAILY DONE ★</div>`;
+      }
+      if (newUnlocks.length > 0) {
+        const names = newUnlocks.map(u => {
+          if (u.startsWith('LOC:')) return 'New location';
+          return OUTFITS[u] ? OUTFITS[u].name : u;
+        }).join(', ');
+        unlockHTML += `<div style="background:var(--yellow);color:var(--shadow);padding:6px 10px;font-size:8px;margin:8px 0;border:2px solid var(--shadow);letter-spacing:1px;">★ UNLOCKED: ${names} ★</div>`;
+      }
+
+      overlay.classList.remove('hide');
+      overlay.classList.add('gameover-mode');
+      overlay.innerHTML = `
+        <h1 style="font-size:32px;color:var(--pink);transform:rotate(-2deg);text-shadow:3px 3px 0 var(--cyan),6px 6px 0 var(--shadow);animation:none;">CAUGHT!</h1>
+        <h2>Sensory overload<br>commencing...</h2>
+        <div class="score-box">
+          SCORE <span class="num">${Math.floor(score)}</span><br>
+          DODGED <span class="num">${dodges}</span><br>
+          BEST <span class="num">${best}</span>
+        </div>
+        ${unlockHTML}
+        <p>${msg}</p>
+        <button id="restart-btn">PLAY AGAIN</button>
+        <button id="menu-btn" class="nav-btn" style="margin-top:8px;">BACK TO MENU</button>
+        <div class="ayuda-footer">© 2026 AYUDA AGENCY LTD · <span class="brand">AYUDA GAMES</span></div>
+      `;
+      const rb = document.getElementById('restart-btn');
+      attachStart(rb);
+      document.getElementById('menu-btn').addEventListener('click', () => {
+        restoreHomeScreen();
+      });
+    }, 700);
+  }
+
+  let lastTime = 0;
+  function loop(t) {
+    if (!lastTime) lastTime = t;
+    const dt = Math.min(50, t - lastTime);
+    lastTime = t;
+
+    if (running) {
+      gameTime += dt;
+      player.turnCooldown = Math.max(0, player.turnCooldown - dt);
+      player.stimPhase += dt * 0.015;
+
+      const calmActive = performance.now() < calmBuffEnd;
+      const calmMul = calmActive ? 0.55 : 1;
+      const speedMul = (1 + Math.min(1.2, gameTime / 30000)) * calmMul;
+      const sp = player.speed * speedMul * dt;
+      const pd = DIRS[player.dir];
+      player.x += pd.x * sp;
+      player.y += pd.y * sp;
+      player.animFrame += dt * 0.012 * speedMul;
+
+      // Camera follows player smoothly
+      camera.x += (player.x - camera.x) * Math.min(1, dt * 0.012);
+      camera.y += (player.y - camera.y) * Math.min(1, dt * 0.012);
+
+      if (Math.random() < 0.4) pathTrail.push({ x: player.x, y: player.y });
+      if (pathTrail.length > 80) pathTrail.shift();
+
+      score += dt * 0.01 * speedMul * ((getOutfit().mod && getOutfit().mod.scoreMul) || 1);
+      scoreEl.textContent = Math.floor(score);
+
+      // Track run stats
+      currentRunStats.timeSurvived = gameTime;
+      currentRunStats.score = score;
+      currentRunStats.dodges = dodges;
+      currentRunStats.distance += player.speed * speedMul * dt;
+      currentRunStats.currentNoTurn += dt;
+      if (currentRunStats.currentNoTurn > currentRunStats.longestNoTurn) {
+        currentRunStats.longestNoTurn = currentRunStats.currentNoTurn;
+      }
+      if (currentRunStats.longestNoTurn >= 90000) unlockAchievement('long_walk');
+
+      spawnTimer -= dt;
+      const spawnRate = Math.max(280, 900 - gameTime / 30);
+      if (spawnTimer <= 0) {
+        spawnNPC();
+        spawnTimer = spawnRate * (0.6 + Math.random() * 0.6);
+      }
+
+      // Spawn friendlies less often, more frequent over time
+      friendlySpawnTimer -= dt;
+      if (friendlySpawnTimer <= 0) {
+        spawnFriendly();
+        friendlySpawnTimer = 8000 + Math.random() * 6000;
+      }
+
+      for (const n of npcs) {
+        const nd = DIRS[n.dir];
+        n.x += nd.x * n.speed * dt;
+        n.y += nd.y * n.speed * dt;
+        n.animFrame += dt * 0.01;
+      }
+
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= dt;
+      });
+      particles = particles.filter(p => p.life > 0);
+
+      // Cull NPCs and friendlies far from player
+      const cullDist = Math.max(W, H) * 1.5;
+      npcs = npcs.filter(n => {
+        const dx = n.x - player.x;
+        const dy = n.y - player.y;
+        return Math.hypot(dx, dy) < cullDist;
+      });
+      friendlies = friendlies.filter(f => {
+        const dx = f.x - player.x;
+        const dy = f.y - player.y;
+        return Math.hypot(dx, dy) < cullDist;
+      });
+
+      // Check friendly meets
+      friendlies.forEach(tryMeetFriendly);
+
+      checkCollisions();
+    }
+
+    if (player) {
+      drawScene();
+      friendlies.forEach(drawFriendly);
+      npcs.filter(n => n.y < player.y).forEach(drawNPC);
+      drawPlayer();
+      npcs.filter(n => n.y >= player.y).forEach(drawNPC);
+      // Calm buff overlay - soft cyan vignette pulse
+      const calmRemain = calmBuffEnd - performance.now();
+      if (calmRemain > 0) {
+        const fade = Math.min(1, calmRemain / 5000);
+        const pulse = (Math.sin(performance.now() * 0.005) + 1) * 0.5;
+        const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.7);
+        grad.addColorStop(0, `rgba(120, 220, 200, 0)`);
+        grad.addColorStop(1, `rgba(80, 200, 180, ${0.25 * fade + 0.08 * pulse})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+        // Calm buff text indicator
+        ctx.fillStyle = `rgba(150, 240, 220, ${0.7 * fade})`;
+        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('CALM ' + (calmRemain / 1000).toFixed(1) + 's', W / 2, 60);
+        ctx.textAlign = 'left';
+      }
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  function unlockAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start(0);
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch(e) {}
+
+    // Lazy-create the soundtrack audio element on first user gesture
+    if (!soundtrack) {
+      soundtrack = new Audio('soundtrack.mp3');
+      soundtrack.loop = true;
+      soundtrack.volume = 0.6;
+      soundtrack.preload = 'auto';
+      soundtrack.addEventListener('canplaythrough', () => { soundtrackReady = true; }, { once: true });
+      soundtrack.addEventListener('error', () => { soundtrackReady = false; });
+    }
+
+    // Preload talker voice clips (8 variations)
+    if (voiceClips.length === 0) {
+      for (let i = 1; i <= 8; i++) {
+        const audio = new Audio(`talker${i}.mp3`);
+        audio.preload = 'auto';
+        audio.volume = 0.7;
+        voiceClips.push(audio);
+      }
+    }
+  }
+
+  // Play a random talker voice clip with overlap protection
+  function playTalkerVoice() {
+    if (voiceClips.length === 0) return;
+    const now = performance.now();
+    // Throttle: no more than one voice every 600ms across all talkers
+    if (now - lastVoicePlayTime < 600) return;
+    lastVoicePlayTime = now;
+    try {
+      const clip = voiceClips[Math.floor(Math.random() * voiceClips.length)];
+      // Clone so it can overlap if a second one fires later
+      const instance = clip.cloneNode();
+      instance.volume = 0.5 + Math.random() * 0.25; // slight volume variation
+      const p = instance.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch(e) {}
+  }
+
+  function playSoundtrack() {
+    if (!soundtrack) return;
+    try {
+      soundtrack.currentTime = 0;
+      const p = soundtrack.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch(e) {}
+  }
+
+  function stopSoundtrack() {
+    if (!soundtrack) return;
+    try {
+      soundtrack.pause();
+      soundtrack.currentTime = 0;
+    } catch(e) {}
+  }
+
+  // Cache home screen HTML so we can restore after game over
+  const homeScreenHTML = overlay.innerHTML;
+  function restoreHomeScreen() {
+    overlay.innerHTML = homeScreenHTML;
+    overlay.classList.remove('gameover-mode');
+    // Re-bind events
+    const sb = document.getElementById('start-btn');
+    if (sb) attachStart(sb);
+    const no = document.getElementById('nav-outfits');
+    if (no) no.addEventListener('click', () => { buildOutfitsLocker(); document.getElementById('locker-outfits').classList.remove('hide'); });
+    const nl = document.getElementById('nav-locations');
+    if (nl) nl.addEventListener('click', () => { buildLocationsLocker(); document.getElementById('locker-locations').classList.remove('hide'); });
+    const nh = document.getElementById('nav-howto');
+    if (nh) nh.addEventListener('click', () => document.getElementById('howto-modal').classList.remove('hide'));
+    refreshTitle();
+  }
+
+  function start(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    unlockAudio();
+    updateStreak();
+    overlay.classList.add('hide');
+    overlay.classList.remove('gameover-mode');
+    requestAnimationFrame(() => {
+      resize();
+      reset();
+      running = true;
+      lastTime = 0;
+      playSoundtrack();
+    });
+  }
+
+  // Refresh title screen daily strip when overlay shown
+  function refreshTitle() {
+    const dailyEl = document.getElementById('daily-strip');
+    if (!dailyEl) return;
+    const daily = getDaily();
+    const streak = progress.streak || 0;
+    const streakPill = streak > 0 ? `<span class="streak-pill">🔥 ${streak} DAY${streak !== 1 ? 'S' : ''}</span>` : '';
+    if (progress.dailyDone) {
+      dailyEl.innerHTML = `<span class="lbl">TODAY ${streakPill}</span><span class="txt done">✓ ${daily.text}</span>`;
+    } else {
+      dailyEl.innerHTML = `<span class="lbl">DAILY ${streakPill}</span><span class="txt">${daily.text}</span>`;
+    }
+  }
+
+  // ===== Locker (outfits/locations) =====
+  function buildOutfitsLocker() {
+    const grid = document.getElementById('outfits-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    Object.keys(OUTFITS).forEach(id => {
+      const o = OUTFITS[id];
+      const unlocked = progress.unlockedOutfits.includes(id);
+      const selected = progress.currentOutfit === id;
+      const card = document.createElement('div');
+      card.className = 'locker-card' + (unlocked ? '' : ' locked') + (selected ? ' selected' : '');
+      card.innerHTML = `
+        <span class="name">${o.name}</span>
+        <canvas width="48" height="48"></canvas>
+        <span class="req">${unlocked ? o.desc : o.unlock}</span>
+      `;
+      grid.appendChild(card);
+      // Draw outfit preview
+      const cv = card.querySelector('canvas');
+      drawOutfitPreview(cv, o, id);
+      if (unlocked) {
+        card.addEventListener('click', () => {
+          progress.currentOutfit = id;
+          saveProgress(progress);
+          buildOutfitsLocker();
+          // Update home hero too
+          if (typeof drawHero === 'function') drawHero();
+        });
+      }
+    });
+  }
+  function drawOutfitPreview(canvas, outfit, id) {
+    const cctx = canvas.getContext('2d');
+    cctx.imageSmoothingEnabled = false;
+    const s = 4;
+    cctx.clearRect(0, 0, 48, 48);
+    function p(x, y, w, h, c) { cctx.fillStyle = c; cctx.fillRect(x*s, y*s, w*s, h*s); }
+
+    // Headwear varies by outfit
+    if (id === 'hoodie') {
+      p(1, 1, 10, 2, outfit.hatShade);
+      p(0, 2, 2, 5, outfit.hat);
+      p(10, 2, 2, 5, outfit.hat);
+      p(1, 3, 10, 1, outfit.hat);
+    } else if (id === 'tourist') {
+      p(1, 3, 10, 1, outfit.hat);
+      p(2, 1, 8, 2, outfit.hat);
+    } else if (id === 'gymrat') {
+      p(2, 3, 8, 1, outfit.hat);
+      p(3, 2, 6, 1, '#3a2614');
+    } else if (id === 'office') {
+      p(2, 2, 8, 2, '#1a1a22');
+      p(6, 2, 1, 2, '#5a5a62');
+    } else {
+      p(3, 1, 6, 1, outfit.hat);
+      p(2, 2, 8, 1, outfit.hat);
+      p(2, 3, 8, 1, outfit.hatShade);
+      if (id === 'influencer') p(5, 0, 2, 1, lighten(outfit.hat, 30));
+    }
+
+    // Head
+    p(3, 4, 6, 3, outfit.skin);
+    p(7, 4, 2, 3, outfit.skinShade);
+
+    // Headphones
+    p(1, 4, 1, 2, '#1a1a22');
+    p(10, 4, 1, 2, '#1a1a22');
+
+    // Sunglasses for shades outfit
+    if (id === 'shades') {
+      p(3, 5, 6, 1, '#0a0a12');
+      p(4, 5, 1, 1, '#3a3a48');
+      p(7, 5, 1, 1, '#3a3a48');
+    }
+
+    // Body / coat
+    p(2, 7, 8, 4, outfit.shirt);
+    p(8, 7, 2, 4, outfit.shirtShade);
+    p(5, 7, 2, 1, outfit.shirtShade);
+
+    // Outfit-specific body accessories
+    if (id === 'office') {
+      p(5, 7, 2, 4, '#a02020');
+    } else if (id === 'tourist') {
+      p(4, 8, 4, 2, '#1a1a22');
+      p(5, 9, 2, 1, '#3a4868');
+      p(2, 10, 8, 1, outfit.accent);
+    } else if (id === 'gymrat') {
+      p(3, 7, 6, 1, outfit.skin);
+    } else if (id === 'influencer') {
+      p(10, 8, 2, 3, '#1a1a22');
+      p(10, 9, 2, 1, '#00f0ff');
+    }
+
+    // Trousers
+    p(3, 11, 2, 1, outfit.trouser);
+    p(7, 11, 2, 1, outfit.trouser);
+  }
+
+  function buildLocationsLocker() {
+    const grid = document.getElementById('locations-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const locations = [
+      { id: 'park',       name: 'The Park',     desc: 'Quiet green space', unlock: 'Default', best: progress.bestPark || 0 },
+      { id: 'beach', name: 'The Beach', desc: 'Sand and sea', unlock: 'Dodge 200 talkers OR score 2500', best: progress.bestBeach || 0 }
+    ];
+    locations.forEach(loc => {
+      const unlocked = progress.unlockedLocations.includes(loc.id);
+      const selected = currentLocation === loc.id;
+      const card = document.createElement('div');
+      card.className = 'locker-card' + (unlocked ? '' : ' locked') + (selected ? ' selected' : '');
+      const desc = unlocked ? `${loc.desc}<br>BEST: ${loc.best}` : loc.unlock;
+      card.innerHTML = `<span class="name">${loc.name}</span><div style="height:48px;display:flex;align-items:center;justify-content:center;font-size:18px;">${loc.id==='park'?'🌳':'🏖️'}</div><span class="req">${desc}</span>`;
+      grid.appendChild(card);
+      if (unlocked) {
+        card.addEventListener('click', () => {
+          currentLocation = loc.id;
+          buildLocationsLocker();
+        });
+      }
+    });
+  }
+
+  // Locker nav buttons
+  document.getElementById('nav-outfits').addEventListener('click', () => {
+    buildOutfitsLocker();
+    document.getElementById('locker-outfits').classList.remove('hide');
+  });
+  document.getElementById('nav-locations').addEventListener('click', () => {
+    buildLocationsLocker();
+    document.getElementById('locker-locations').classList.remove('hide');
+  });
+  document.getElementById('back-outfits').addEventListener('click', () => {
+    document.getElementById('locker-outfits').classList.add('hide');
+    if (typeof drawHero === 'function') drawHero();
+  });
+  document.getElementById('back-locations').addEventListener('click', () => {
+    document.getElementById('locker-locations').classList.add('hide');
+  });
+
+  // How To Play modal
+  function openHowTo() {
+    document.getElementById('howto-modal').classList.remove('hide');
+  }
+  function closeHowTo() {
+    document.getElementById('howto-modal').classList.add('hide');
+  }
+  document.getElementById('nav-howto').addEventListener('click', openHowTo);
+  document.getElementById('howto-close').addEventListener('click', closeHowTo);
+  document.getElementById('howto-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'howto-modal') closeHowTo();
+  });
+
+  function attachStart(el) {
+    if (!el) return;
+    let handled = false;
+    const handler = (e) => {
+      if (handled) { handled = false; return; }
+      handled = true;
+      setTimeout(() => { handled = false; }, 300);
+      start(e);
+    };
+    el.addEventListener('touchstart', handler, { passive: false });
+    el.addEventListener('click', handler);
+  }
+
+  attachStart(startBtn);
+
+  let inputHandled = false;
+  function handleTap(e) {
+    e.preventDefault();
+    if (inputHandled) { inputHandled = false; return; }
+    inputHandled = true;
+    setTimeout(() => { inputHandled = false; }, 100);
+    if (!running) return;
+    turn();
+  }
+
+  document.getElementById('wrap').addEventListener('touchstart', (e) => {
+    if (overlay.classList.contains('hide') && running) {
+      handleTap(e);
+    }
+  }, { passive: false });
+
+  document.getElementById('wrap').addEventListener('mousedown', (e) => {
+    if (overlay.classList.contains('hide') && running) {
+      handleTap(e);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Enter') {
+      e.preventDefault();
+      if (running) turn();
+      else if (!overlay.classList.contains('hide')) start();
+    }
+  });
+
+  // Pause soundtrack when tab hidden, resume when visible and game running
+  document.addEventListener('visibilitychange', () => {
+    if (!soundtrack) return;
+    if (document.hidden) {
+      soundtrack.pause();
+    } else if (running) {
+      const p = soundtrack.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+  });
+
+  setTimeout(() => {
+    setVH();
+    resize();
+  }, 50);
+
+  requestAnimationFrame(loop);
+
+  // Title screen hero animation — chunky pixel character bobbing
+  // Note: drawHero re-queries the canvas every call because innerHTML restore
+  // creates a fresh canvas element (cached references become detached).
+  if (document.getElementById('hero-canvas')) {
+
+    function drawHero() {
+      const heroCanvas = document.getElementById('hero-canvas');
+      if (!heroCanvas) return;
+      const hctx = heroCanvas.getContext('2d');
+      hctx.imageSmoothingEnabled = false;
+      const W = heroCanvas.width;
+      const H = heroCanvas.height;
+      hctx.clearRect(0, 0, W, H);
+
+      // Higher-res 16-bit style grid for proper detail
+      const grid = 40;
+      const scale = Math.floor(Math.min(W, H) / grid);
+      const offsetX = Math.floor((W - grid * scale) / 2);
+      const offsetY = Math.floor((H - grid * scale) / 2);
+
+      function p(x, y, color) {
+        hctx.fillStyle = color;
+        hctx.fillRect(offsetX + x * scale, offsetY + y * scale, scale, scale);
+      }
+      function rect(x, y, w, h, color) {
+        hctx.fillStyle = color;
+        hctx.fillRect(offsetX + x * scale, offsetY + y * scale, w * scale, h * scale);
+      }
+
+      const outfit = getOutfit();
+      // === COLOUR PALETTE (driven by current outfit) ===
+      const BEANIE = outfit.hat;
+      const BEANIE_HI = lighten(outfit.hat, 20);
+      const BEANIE_SHADE = outfit.hatShade;
+      const BEANIE_RIM = darken(outfit.hatShade, 15);
+      // Skin tones
+      const SKIN = outfit.skin;
+      const SKIN_SHADE = outfit.skinShade;
+      const SKIN_DARK = darken(outfit.skinShade, 20);
+      // Headphones - matte black with detail
+      const HP = '#1a1a22';
+      const HP_HI = '#3a3a48';
+      const HP_DARK = '#0a0a12';
+      const HP_CUSHION = '#2a2a35';
+      const HP_LED = '#ff3838';
+      const HP_LOGO = '#888894';
+      // Chore coat (outfit-driven)
+      const COAT = outfit.shirt;
+      const COAT_HI = lighten(outfit.shirt, 18);
+      const COAT_SHADE = outfit.shirtShade;
+      const COAT_DARK = darken(outfit.shirtShade, 15);
+      const COAT_STITCH = outfit.accent;
+      const COAT_BUTTON = darken(outfit.shirtShade, 25);
+      const CORDUROY = outfit.shirtShade;
+      // Jeans (outfit-driven)
+      const JEANS = outfit.trouser;
+      const JEANS_HI = lighten(outfit.trouser, 12);
+      const JEANS_SHADE = darken(outfit.trouser, 15);
+      // Shoes
+      const SHOE = '#1f1a14';
+      const SHOE_SOLE = '#3a3028';
+      // Face
+      const HAIR = '#3a2614';
+      const EYE = '#1a1a22';
+      const BROW = '#3a2614';
+      const MOUTH = '#7a3a3a';
+      const LIP = '#a05a4a';
+      const CHEEK = '#d49070';
+
+      // ===========================
+      //  CHARACTER (centred horizontally around col 20)
+      // ===========================
+
+      // === SHADOW ===
+      hctx.fillStyle = 'rgba(0,0,0,0.3)';
+      hctx.beginPath();
+      hctx.ellipse(20 * scale + offsetX, 39 * scale + offsetY, 11 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+      hctx.fill();
+
+      // === BEANIE (rows 0-6) ===
+      // Crown of beanie - chunky knitted look
+      rect(13, 0, 14, 1, BEANIE_SHADE);
+      rect(12, 1, 16, 2, BEANIE);
+      rect(11, 3, 18, 3, BEANIE);
+      // Highlight on left side (light source)
+      rect(12, 1, 3, 4, BEANIE_HI);
+      // Shading on right
+      rect(25, 1, 3, 5, BEANIE_SHADE);
+      // Knit texture - small horizontal lines
+      rect(13, 3, 14, 1, BEANIE_SHADE);
+      p(14, 2, BEANIE_HI);
+      p(18, 2, BEANIE_HI);
+      p(22, 2, BEANIE_HI);
+      // Cuff/rim of beanie (folded edge)
+      rect(11, 6, 18, 1, BEANIE_RIM);
+      rect(11, 5, 18, 1, BEANIE_SHADE);
+
+      // === HAIR peek under beanie at temples ===
+      p(11, 7, HAIR);
+      p(12, 7, HAIR);
+      p(27, 7, HAIR);
+      p(28, 7, HAIR);
+
+      // === HEAD (rows 7-15) ===
+      rect(13, 7, 14, 9, SKIN);
+      // Right side shading (light from upper-left)
+      rect(24, 7, 3, 9, SKIN_SHADE);
+      // Jaw
+      rect(14, 15, 12, 1, SKIN_SHADE);
+      rect(15, 16, 10, 1, SKIN_SHADE);
+      // Neck
+      rect(17, 17, 6, 2, SKIN_SHADE);
+      rect(17, 17, 6, 1, SKIN_DARK);
+
+      // === FACE DETAIL ===
+      // Eyebrows (full)
+      rect(14, 9, 4, 1, BROW);
+      rect(22, 9, 4, 1, BROW);
+      p(15, 8, BROW);
+      p(23, 8, BROW);
+      // Eye sockets (subtle shading)
+      rect(14, 10, 4, 1, SKIN_SHADE);
+      rect(22, 10, 4, 1, SKIN_SHADE);
+      // Eyes - whites
+      rect(15, 11, 2, 1, '#f4ece0');
+      rect(23, 11, 2, 1, '#f4ece0');
+      // Pupils
+      p(16, 11, EYE);
+      p(23, 11, EYE);
+      // Nose - shading & nostrils
+      rect(19, 11, 2, 2, SKIN_SHADE);
+      p(19, 13, SKIN_SHADE);
+      p(20, 13, SKIN_SHADE);
+      p(19, 12, SKIN);
+      p(20, 12, SKIN);
+      // Cheek warmth
+      p(15, 13, CHEEK);
+      p(16, 13, CHEEK);
+      p(23, 13, CHEEK);
+      p(24, 13, CHEEK);
+      // Mouth (subtle frown / closed)
+      rect(17, 14, 6, 1, MOUTH);
+      p(17, 14, LIP);
+      p(22, 14, LIP);
+
+      // === HEADPHONES (drawn over beanie & sides of head) ===
+      // Headband - arches over the top of the beanie
+      // Outer band
+      rect(13, 1, 14, 1, HP);
+      rect(12, 2, 16, 1, HP);
+      rect(11, 3, 18, 1, HP);
+      // Inner padding/highlight on top
+      rect(13, 2, 14, 1, HP_HI);
+      rect(13, 3, 14, 1, HP_HI);
+      // Headband sides curving down to cups
+      rect(10, 4, 2, 4, HP);
+      rect(28, 4, 2, 4, HP);
+      // Hinges
+      p(11, 7, HP_HI);
+      p(28, 7, HP_HI);
+
+      // === LEFT EAR CUP (chunky over-ear) ===
+      // Outer shell
+      rect(8, 8, 5, 7, HP);
+      rect(8, 8, 5, 1, HP_HI);
+      rect(8, 14, 5, 1, HP_DARK);
+      // Cushion (lighter, padded ring)
+      rect(9, 9, 3, 5, HP_CUSHION);
+      p(9, 9, HP_HI);
+      p(11, 9, HP_HI);
+      p(9, 13, HP_DARK);
+      p(11, 13, HP_DARK);
+      // Brand logo dot
+      p(10, 11, HP_LOGO);
+      // LED indicator
+      p(8, 10, HP_LED);
+
+      // === RIGHT EAR CUP ===
+      rect(27, 8, 5, 7, HP);
+      rect(27, 8, 5, 1, HP_HI);
+      rect(27, 14, 5, 1, HP_DARK);
+      // Cushion
+      rect(28, 9, 3, 5, HP_CUSHION);
+      p(28, 9, HP_HI);
+      p(30, 9, HP_HI);
+      p(28, 13, HP_DARK);
+      p(30, 13, HP_DARK);
+      // Brand logo dot
+      p(29, 11, HP_LOGO);
+
+      // === HANDS CUPPED OVER HEADPHONES ===
+      // Left hand - palm pressed against cup, fingers curled
+      rect(5, 8, 3, 8, SKIN);
+      rect(5, 8, 3, 1, SKIN_SHADE);
+      // Knuckle definition
+      p(5, 10, SKIN_SHADE);
+      p(5, 12, SKIN_SHADE);
+      p(5, 14, SKIN_SHADE);
+      // Thumb wrapping over top of cup
+      p(8, 8, SKIN);
+      p(7, 7, SKIN);
+      // Wrist
+      rect(5, 16, 3, 1, SKIN_SHADE);
+
+      // Right hand
+      rect(32, 8, 3, 8, SKIN);
+      rect(32, 8, 3, 1, SKIN_SHADE);
+      p(34, 10, SKIN_SHADE);
+      p(34, 12, SKIN_SHADE);
+      p(34, 14, SKIN_SHADE);
+      p(31, 8, SKIN);
+      p(32, 7, SKIN);
+      rect(32, 16, 3, 1, SKIN_SHADE);
+
+      // === COAT SLEEVES (arms going from body up to ears) ===
+      // Left sleeve
+      rect(5, 17, 4, 4, COAT);
+      rect(5, 17, 1, 4, COAT_SHADE);
+      rect(8, 17, 1, 4, COAT_HI);
+      // Stitching detail
+      p(7, 17, COAT_STITCH);
+      // Right sleeve
+      rect(31, 17, 4, 4, COAT);
+      rect(31, 17, 1, 4, COAT_SHADE);
+      rect(34, 17, 1, 4, COAT_DARK);
+      p(33, 17, COAT_STITCH);
+
+      // ===========================
+      //  CHORE COAT BODY
+      // ===========================
+      // Main coat body (boxy chore coat silhouette)
+      rect(9, 18, 22, 14, COAT);
+      // Right side shading
+      rect(27, 18, 4, 14, COAT_SHADE);
+      // Left side highlight
+      rect(9, 18, 2, 14, COAT_HI);
+      // Bottom hem (subtle darker line)
+      rect(9, 31, 22, 1, COAT_DARK);
+      p(9, 32, COAT_DARK);
+      p(30, 32, COAT_DARK);
+
+      // === CORDUROY COLLAR (raised, darker brown) ===
+      // Collar shape - V neck with raised sides
+      rect(12, 17, 16, 2, CORDUROY);
+      rect(11, 18, 2, 2, CORDUROY);
+      rect(27, 18, 2, 2, CORDUROY);
+      // Corduroy ribbing texture (vertical lines)
+      for (let i = 0; i < 8; i++) {
+        p(13 + i * 2, 17, COAT_DARK);
+        p(13 + i * 2, 18, COAT_DARK);
+      }
+      // V opening at front
+      rect(18, 18, 4, 2, SKIN_DARK);
+      rect(19, 19, 2, 1, SKIN);
+
+      // === CENTRE PLACKET / BUTTONS ===
+      // Vertical seam down centre
+      rect(19, 20, 2, 12, COAT_SHADE);
+      p(20, 20, COAT_STITCH);
+      // Buttons (4 down the front - chore coat hallmark)
+      p(20, 22, COAT_BUTTON);
+      p(20, 25, COAT_BUTTON);
+      p(20, 28, COAT_BUTTON);
+      p(20, 31, COAT_BUTTON);
+      // Button highlights
+      p(19, 22, COAT_HI);
+      p(19, 25, COAT_HI);
+      p(19, 28, COAT_HI);
+
+      // === CHEST POCKETS (TWO - signature chore coat detail) ===
+      // Left chest pocket
+      rect(11, 21, 6, 5, COAT_SHADE);
+      rect(12, 22, 4, 3, COAT);
+      // Pocket flap stitching
+      rect(11, 21, 6, 1, COAT_STITCH);
+      // Pocket button
+      p(14, 25, COAT_BUTTON);
+      // Right chest pocket
+      rect(23, 21, 6, 5, COAT_SHADE);
+      rect(24, 22, 4, 3, COAT);
+      rect(23, 21, 6, 1, COAT_STITCH);
+      p(26, 25, COAT_BUTTON);
+
+      // === LOWER POCKETS (handwarmer) - chore coat detail ===
+      // Left lower pocket
+      rect(11, 27, 6, 4, COAT_SHADE);
+      rect(12, 28, 4, 2, COAT);
+      rect(11, 27, 6, 1, COAT_STITCH);
+      // Right lower pocket
+      rect(23, 27, 6, 4, COAT_SHADE);
+      rect(24, 28, 4, 2, COAT);
+      rect(23, 27, 6, 1, COAT_STITCH);
+
+      // === JEANS ===
+      // Left leg
+      rect(12, 32, 7, 6, JEANS);
+      rect(12, 32, 1, 6, JEANS_HI);
+      rect(17, 32, 2, 6, JEANS_SHADE);
+      // Right leg
+      rect(21, 32, 7, 6, JEANS);
+      rect(21, 32, 1, 6, JEANS_HI);
+      rect(26, 32, 2, 6, JEANS_SHADE);
+      // Centre gap
+      rect(19, 32, 2, 6, COAT_DARK);
+      // Cuff line
+      rect(12, 37, 7, 1, JEANS_HI);
+      rect(21, 37, 7, 1, JEANS_HI);
+
+      // === SHOES ===
+      rect(11, 38, 8, 2, SHOE);
+      rect(21, 38, 8, 2, SHOE);
+      // Sole highlight
+      rect(11, 39, 8, 1, SHOE_SOLE);
+      rect(21, 39, 8, 1, SHOE_SOLE);
+
+      // ===== OUTFIT ACCESSORIES (front view) =====
+      const oid = outfit.id;
+      if (oid === 'hoodie') {
+        // Hood drawn around the head (already partial via hat, add depth)
+        rect(8, 5, 24, 2, outfit.hatShade);
+        rect(7, 7, 2, 12, outfit.hat);     // left side
+        rect(31, 7, 2, 12, outfit.hat);    // right side
+        rect(7, 6, 2, 2, outfit.hatShade);
+        rect(31, 6, 2, 2, outfit.hatShade);
+        // Inner shadow on face top
+        rect(13, 8, 14, 1, darken(SKIN, 25));
+      } else if (oid === 'tourist') {
+        // Bucket hat brim - wider than default
+        rect(7, 5, 26, 2, outfit.hat);
+        rect(7, 5, 26, 1, lighten(outfit.hat, 20));
+        // Camera around neck
+        rect(17, 19, 6, 4, '#1a1a22');
+        rect(18, 20, 4, 2, '#3a4868');     // lens body
+        rect(19, 20, 2, 1, '#5a8aa8');     // glass
+        // Camera strap
+        rect(15, 16, 1, 4, '#3a2a18');
+        rect(24, 16, 1, 4, '#3a2a18');
+        // Bumbag
+        rect(11, 28, 18, 2, outfit.accent);
+        rect(11, 28, 18, 1, lighten(outfit.accent, 25));
+        rect(19, 29, 2, 1, '#1a1a22');     // buckle
+      } else if (oid === 'office') {
+        // Slicked back hair (instead of beanie)
+        rect(11, 5, 18, 3, '#1a1a22');
+        rect(11, 5, 18, 1, '#3a3a48');
+        // Side part
+        rect(20, 5, 1, 3, '#5a5a62');
+        // Briefcase in right hand
+        rect(33, 22, 6, 8, '#1a1a22');
+        rect(33, 22, 6, 1, '#3a3a48');
+        rect(35, 21, 2, 1, '#1a1a22'); // handle
+        rect(35, 25, 1, 1, '#d4af37'); // gold clasp
+        // Tie visible
+        rect(19, 18, 2, 8, '#a02020');
+        rect(19, 18, 2, 1, '#c83838');
+      } else if (oid === 'gymrat') {
+        // Sweatband (instead of beanie)
+        rect(11, 7, 18, 2, outfit.hat);
+        rect(11, 7, 18, 1, lighten(outfit.hat, 30));
+        // Hair tuft above
+        rect(15, 5, 10, 2, '#3a2614');
+        // Sweat drops on temples
+        rect(8, 10, 1, 2, '#a0e8ff');
+        rect(31, 11, 1, 2, '#a0e8ff');
+        // Tank top instead of coat - chest line cut higher
+        rect(13, 18, 14, 2, outfit.skin); // bare upper chest
+        rect(16, 17, 8, 1, SKIN_SHADE);
+        // Muscle definition
+        rect(15, 18, 1, 2, SKIN_SHADE);
+        rect(24, 18, 1, 2, SKIN_SHADE);
+      } else if (oid === 'shades') {
+        // Sunglasses across both eyes
+        rect(12, 12, 16, 4, '#0a0a12');
+        rect(12, 12, 16, 1, '#3a3a48');     // top frame
+        // Lens highlights
+        rect(14, 13, 4, 1, '#1f2840');
+        rect(22, 13, 4, 1, '#1f2840');
+        // Bridge
+        rect(19, 13, 2, 1, '#1a1a22');
+        // Arms (temples)
+        rect(8, 12, 4, 1, '#0a0a12');
+        rect(28, 12, 4, 1, '#0a0a12');
+      } else if (oid === 'influencer') {
+        // Pom on beanie
+        rect(19, 3, 2, 2, lighten(outfit.hat, 30));
+        rect(20, 2, 1, 1, lighten(outfit.hat, 40));
+        // Phone held out to side
+        rect(33, 18, 4, 7, '#1a1a22');
+        rect(33, 18, 4, 1, '#3a3a48');
+        rect(34, 19, 2, 5, '#00f0ff');    // screen
+        rect(34, 20, 1, 1, '#ffffff');    // app icon
+        // Ring light glow
+        hctx.fillStyle = 'rgba(255, 255, 200, 0.35)';
+        hctx.beginPath();
+        hctx.arc(offsetX + 35 * scale, offsetY + 21 * scale, 8 * scale, 0, Math.PI * 2);
+        hctx.fill();
+        // Heart/like emoji floating
+        rect(38, 14, 2, 2, '#ff2d95');
+        rect(37, 15, 1, 1, '#ff2d95');
+      }
+    }
+
+    drawHero();
+    refreshTitle();
+
+    // Redraw if overlay class changes (returning from game over)
+    const observer = new MutationObserver(() => {
+      if (!overlay.classList.contains('hide') && !overlay.classList.contains('gameover-mode')) {
+        if (!document.getElementById('hero-canvas')) return;
+        drawHero();
+        refreshTitle();
+      }
+    });
+    observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+  }
+})();
+</script>
+
+</body>
+</html>
